@@ -131,3 +131,22 @@ if (form && alertBox) {
         }
     });
 }
+/* --- GALLERY LOGIC START --- */
+// Laboratory Requirement: Basic Interactivity (Console log on load)
+document.addEventListener("DOMContentLoaded", function() {
+    console.log("HABITBIT GALLERY LOADED SUCCESSFULLY");
+});
+
+// Horizontal Scroll Functionality for Gallery Containers
+const scrollContainers = document.querySelectorAll('.scroll-container');
+
+if (scrollContainers.length > 0) {
+    scrollContainers.forEach(container => {
+        container.addEventListener('wheel', (evt) => {
+            evt.preventDefault();
+            // Inililipat ang vertical scroll ng mouse wheel para maging horizontal scroll
+            container.scrollLeft += evt.deltaY;
+        });
+    });
+}
+/* --- GALLERY LOGIC END --- */
