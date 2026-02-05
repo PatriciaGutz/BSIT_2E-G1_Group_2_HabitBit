@@ -92,3 +92,31 @@ body {
     cursor: pointer;
     box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
+
+.contact-section {
+    min-height: 70vh;
+}
+
+.contact-container {
+    max-width: 700px;
+}
+
+.contact-info i {
+    color: var(--hb-orange);
+    margin-right: 6px;
+}
+
+.btn-orange-custom {
+    background-color: var(--hb-orange);
+    border: none;
+    color: white;
+    font-weight: 600;
+}
+
+.btn-orange-custom:hover {
+    background-color: #ff9f2a;
+}
+
+#formAlert {
+    transition: opacity 0.4s ease;
+}
