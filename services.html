@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HabitBit - Profile</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- THe navbar and links-->
+<nav class="navbar navbar-expand-lg navbar-light custom-navbar">
+  <div class="container-fluid">
+    <a class="navbar-brand d-flex align-items-center" href="index.html">
+      <img src="../Images/logo.png" alt="HabitBit Logo" height="40" class="me-2">
+      <span class="fw-bold text-white fs-3">HabitBit</span>
+    </a>
+    <div class="d-flex text-white small">
+      <a href="contact.html" class="text-white text-decoration-none me-3">Contact</a>
+      <a href="#" class="text-white text-decoration-none me-3">About</a>
+      <a href="#" class="text-white text-decoration-none">🔔</a>
+    </div>
+  </div>
+</nav>
+
+    <div class="d-flex align-items-center justify-content-between mb-3" style="margin-top: 10px; margin-left: 35px;">
+    <div class="d-flex align-items-center gap-3">
+      <img src="https://ui-avatars.com/api/?name=Abcde+F+Ghijaman&background=77D0A0&color=fff" 
+           class="rounded-circle" width="75">
+      <div>
+        <h4 class="fw-bold mb-0">Abcde F. Ghijaman</h4>
+        <small class="text-muted">🖂 abcde@gmail.com</small>
+      </div>
+    </div>
+    <button class="btn btn-sm btn-outline-secondary squared-pill" style="margin-top: -40px; margin-right: 30pt;">Log out ➜]</button>
+  </div>
+
+<!--Progress bar-->
+
+ <div class="bg-white p-3 rounded-4 shadow-sm border mb-4" style="margin-left: 30pt; margin-right: 30pt;">
+
+    <div class="d-flex justify-content-between align-items-center mb-2 px-2">
+    <h6 class="fw-bold mb-0" style="font-size: 1.25rem; line-height: 1;">Today's Progress</h6>
+  </div>
+
+  <div class="d-flex align-items-center justify-content-between px-2">
+    <div class="progress mb-2" style="height: 8px; width: 770pt;">
+      <div id="today-progress-bar" class="progress-bar bg-success" style="width: 0%; height: 100%;"></div>
+    </div>
+
+    <button class="complete-btn" onclick="completeAll()">Complete all</button>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center px-2">
+    <small id="today-progress-count" class="text-muted">0/0 Habits done</small>  
+    <small id="today-progress-text" class="fw-semibold" style="margin-right: 90pt;">0%</small>
+  </div>
+</div>
+</div>
+
+<!-- Habits List -->
+  <h6 class="fw-bold mb-2" style="margin-left: 30pt; margin-right: 30pt;">My Habits List</h6>
+  <div id="habit-list" class="bg-white p-3 rounded-1 shadow-sm border"
+     style="margin-left: 30pt; margin-right: 30pt;">
+  </div>
+</div>
+
+<!--bottom nav-->
+    <div class="nav-wrapper" style="margin-left: -8px;">
+    <div class="app-nav d-flex justify-content-around align-items-center shadow-lg">
+        <a href="index.html" class="nav-link active">🏠</a>
+        <div class="fab-btn" onclick="openHabitModal()">+</div>
+        <a href="services.html" class="nav-link text-white">👤</a>
+    </div>
+</div>
+
+<!-- EDIT HABIT MODAL -->
+<div id="habitModal" class="modal">
+  <div class="modal-content edit-habit">
+
+    <!-- Header -->
+    <div class="modal-header">
+      <button class="close-btn" onclick="closeHabitModal()">✕</button>
+      <h2 style="margin-left: 70pt;">Edit Habit</h2>
+    </div>
+
+    <!-- Habit name -->
+    <div class="input-row">
+      <div class="icon-pill">
+        <div class="input-icon"><input type="text" placeholder="Icon"/>
+        </div>
+      </div>
+      
+      <div class="input-box">
+        <input id="habitTitle" type="text" placeholder="Title" />
+        <button class="info-btn" onclick="toggleDesc()">i</button>
+        </div>
+    </div>
+<div id="descBox" class="desc-box">
+  <textarea id="habitDesc" placeholder="Description (optional)"></textarea>
+</div>
+<!-- Repeat -->
+    <div class="row-box">
+      <span>Repeat</span>
+      <div class="input-box">
+        <input id="habitRepeat" type="text" value="Mon, Wed, Fri" style="text-align: right;">
+      </div>
+    </div>
+
+    <div class="row-box">
+        <span>Set Time</span>
+        <div class="input-box">
+            <input id="habitTime" type="time" value="7:00" style="text-align: right;"/></div>
+    </div>
+
+    <button class="confirm-btn" onclick="saveHabit()">Confirm</button>
+
+  </div>
+</div>
+<script src="js/main.js"></script>
+
+  </body>
+</html>
