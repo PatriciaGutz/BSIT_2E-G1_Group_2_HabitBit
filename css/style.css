@@ -1,4 +1,3 @@
-
 :root {
     --hb-orange: #FFB347;
     --hb-teal: #77D0A0;
@@ -119,4 +118,42 @@ body {
 
 #formAlert {
     transition: opacity 0.4s ease;
+}
+
+/* GALLERY STYLES START HERE */
+.scroll-container {
+    display: flex;
+    overflow-x: auto;
+    gap: 20px;
+    padding: 20px 0;
+    scroll-behavior: smooth;
+}
+
+.scroll-container::-webkit-scrollbar {
+    display: none;
+}
+
+.gallery-card {
+    min-width: 300px;
+    border: none;
+    transition: transform 0.3s ease;
+    background: none;
+}
+
+.gallery-card:hover {
+    transform: translateY(-10px);
+}
+
+.gallery-card img {
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    height: 450px;
+    object-fit: contain;
+    background: #fff;
+}
+
+.section-title {
+    font-weight: 700;
+    color: var(--hb-dark);
+    margin-top: 40px;
 }
