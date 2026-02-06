@@ -241,6 +241,8 @@ function renderHabits() {
 function editHabit(i) {
   editIndex = i;
 
+  openHabitModal();
+
   habitTitle.value = habits[i].title;
   habitRepeat.value = habits[i].repeat;
   habitTime.value = habits[i].time;
