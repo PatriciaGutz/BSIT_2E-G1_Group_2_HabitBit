@@ -157,3 +157,213 @@ body {
     color: var(--hb-dark);
     margin-top: 40px;
 }
+
+
+/*Services*/
+.complete-btn{
+ background: #fbbf24;
+  color: #111827;
+  border: none;
+  padding: 6px 14px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 999px;
+  cursor: pointer;
+  
+}
+ 
+/* Modal base !*/
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+/* Main card !*/
+.modal-content.edit-habit {
+  background: #79c86a;
+  width: 90%;
+  max-width: 420px;
+  padding: 22px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+
+/* Header !*/
+.modal-header {
+  position: relative;
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-weight: 700;
+}
+
+.close-btn {
+  position: absolute;
+  left: 0;
+  top: 0;
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* Habit name row !*/
+.input-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+/* Description box !(ⓘ button) */
+.desc-box {
+  display: none;
+  margin-top: 10px;
+}
+
+.desc-box textarea {
+  width: 100%;
+  min-height: 60px;
+  resize: none;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.icon-pill {
+  background: #fff;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-weight: 500;
+  min-width: 70px;
+  text-align: center;
+}
+
+.input-box {
+  background: #fff;
+  border-radius: 14px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  flex: 1;
+    
+}
+
+.input-icon input {
+    border: none;
+    outline: none;
+    width: 60%;
+    font-size: 11px;
+}
+
+.input-box input {
+  border: none;
+  outline: none;
+  font-size: 16px;
+  flex: 1;
+}
+
+.info-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #e6e6e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  border-color: #aaa;
+}
+
+.row-box {
+  background: #fff;
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 500;
+}
+
+.confirm-btn {
+  margin: 14px auto 0;
+  display: block;
+  background: #ffc27a;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 34px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+  transform: translateY(2px);
+}
+
+/* Habit item */
+.habit-row {
+  background: #e6e6e6;
+  padding: 12px;
+  border-radius: 14px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: 0.2s ease;
+}
+
+.habit-row:hover {
+  background: #f4f7fb;
+}
+
+.habit-left {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.habit-title {
+  position: relative;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.habit-title:hover .tooltip {
+  display: block;
+}
+
+.tooltip {
+  display: none;
+  position: absolute;
+  top: 24px;
+  left: 0;
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+  width: 160px;
+  z-index: 10;
+}
+
+.habit-actions button {
+  font-size: 11px;
+  padding: 4px 10px;
+  margin-left: 5px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+}
+
+.done-btn {
+  background: #fbbf24;
+}
