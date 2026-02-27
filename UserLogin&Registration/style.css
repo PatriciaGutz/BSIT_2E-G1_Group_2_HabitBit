@@ -1,0 +1,41 @@
+:root {
+  --hb-orange: #ffb347;
+  --hb-teal: #77d0a0;
+  --hb-error: #dc3545;
+}
+
+body { font-family: "Inter", sans-serif; background-color: #fafafa; margin: 0; }
+
+.custom-navbar {
+  background: linear-gradient(90deg, var(--hb-orange), var(--hb-teal)) !important;
+  padding: 15px 0;
+}
+
+.auth-container { max-width: 550px; margin: 50px auto; padding: 0 20px; }
+
+.card {
+  border: none; border-radius: 25px; padding: 40px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.08); background: #fff;
+}
+
+.form-control { padding: 12px; border-radius: 10px; border: 1px solid #ddd; }
+
+.is-invalid-input { border-color: var(--hb-error) !important; }
+
+.error-msg { color: var(--hb-error); font-size: 0.8rem; margin-top: 4px; display: block; min-height: 1.2rem; }
+
+.password-wrapper { position: relative; }
+
+.toggle-password {
+  position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
+  cursor: pointer; color: #888;
+}
+
+.btn-habitbit {
+  background-color: var(--hb-orange); border: none; color: white;
+  font-weight: 700; padding: 14px; border-radius: 12px;
+}
+
+.btn-habitbit:disabled { background-color: #d1d1d1; cursor: not-allowed; }
+
+.text-orange { color: var(--hb-orange) !important; }

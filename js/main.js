@@ -1,6 +1,4 @@
-/* =========================================
-   DAILY QUOTES LOGIC
-   ========================================= */
+/*DAILY QUOTES LOGIC*/
 const quotes = [
   "Philippians 4:13 - I can do all things through Christ who strengthens me.",
   "Every habit is a bit of progress toward the person you are becoming.",
@@ -34,9 +32,7 @@ if (dailyQuoteEl) {
   dailyQuoteEl.innerText = finalQuote;
 }
 
-/* =========================================
-   CALENDAR LOGIC
-   ========================================= */
+/*CALENDAR LOGIC */
 const grid = document.getElementById("calendar-grid");
 let currentMonth = today.getMonth();
 let currentYear = today.getFullYear();
@@ -114,9 +110,7 @@ window.changeMonth = function (dir) {
 updateMonthLabel();
 buildCalendar();
 
-/* =========================================
-   CONTACT FORM LOGIC
-   ========================================= */
+/*CONTACT FORM LOGIC*/
 const form = document.getElementById("contactForm");
 const alertBox = document.getElementById("formAlert");
 
@@ -136,13 +130,10 @@ if (form && alertBox) {
   });
 }
 
-/* =========================================
-   GALLERY & GLOBAL INTERACTIVITY
-   ========================================= */
+/*GALLERY & GLOBAL INTERACTIVITY*/
 document.addEventListener("DOMContentLoaded", function () {
   console.log("HABITBIT SYSTEM: All modules loaded.");
 
-  // Horizontal Scroll for Gallery
   const scrollContainers = document.querySelectorAll(".scroll-container");
   if (scrollContainers.length > 0) {
     scrollContainers.forEach((container) => {
@@ -154,9 +145,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-/* =========================================
-   SERVICES & HABIT TRACKER LOGIC
-   ========================================= */
+/*SERVICES & HABIT TRACKER LOGIC */
 const habitModal = document.getElementById("habitModal");
 const habitTitle = document.getElementById("habitTitle");
 const habitRepeat = document.getElementById("habitRepeat");
@@ -264,10 +253,7 @@ function updateProgress() {
   if (todayProgressText) todayProgressText.innerText = percent + "%";
 }
 
-/* =========================================
-   ABOUT PAGE SPECIFIC LOGIC
-   ========================================= */
-// Taglish: Functionality para sa plus button (FAB) sa About Page
+/*ABOUT PAGE SPECIFIC LOGIC*/
 const fabBtn = document.querySelector(".fab-btn");
 if (fabBtn && window.location.pathname.includes("about.html")) {
   fabBtn.addEventListener("click", () => {
