@@ -32,8 +32,7 @@ if (dailyQuoteEl) {
   dailyQuoteEl.innerText = finalQuote;
 }
 
-/*CALENDAR LOGIC */
-const grid = document.getElementById("calendar-grid");
+/*CALENDAR LOGIC */const grid = document.getElementById("calendar-grid");
 let currentMonth = today.getMonth();
 let currentYear = today.getFullYear();
 
