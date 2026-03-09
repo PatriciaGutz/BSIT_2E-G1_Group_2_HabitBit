@@ -30,19 +30,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function isEmailValid(email) {
         if (email.trim() === "") return "required";
-      
         const isValid = email.includes("@") && email.includes(".") && email.indexOf("@") < email.lastIndexOf(".");
         return isValid ? "ok" : "invalid";
     }
 
     function isPasswordValid(pass) {
         if (pass.length === 0) return "required";
-        
         const hasUpper = pass !== pass.toLowerCase();
         const hasLower = pass !== pass.toUpperCase();
         let hasNum = false;
         for (let char of pass) { if (char >= '0' && char <= '9') hasNum = true; }
-        
         const isValid = pass.length >= 8 && hasUpper && hasLower && hasNum;
         return isValid ? "ok" : "invalid";
     }
@@ -56,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return "ok";
     }
 
-    //login page
+    //login page logic
     if (loginForm) {
         const emailIn = document.getElementById('loginEmail');
         const passIn = document.getElementById('loginPassword');
@@ -85,27 +82,22 @@ document.addEventListener('DOMContentLoaded', () => {
         [emailIn, passIn].forEach(el => el.addEventListener('input', validateLoginBtn));
 
         loginForm.addEventListener('submit', (e) => {
-            e.preventDefault(); // stop invalid submission
-            
+            e.preventDefault();
             const emailStatus = isEmailValid(emailIn.value);
             const passStatus = passIn.value.length > 0;
-
-            // pass is "Admin123"
-            if (emailStatus !== "ok") setError(emailIn, emailErr, emailStatus === "required" ? "Email is required." : "Invalid email format.");
-            if (!passStatus) setError(passIn, passErr, "Password is required.");
 
             if (emailStatus === "ok" && passStatus) {
                 if (passIn.value !== "Admin123") {
                     setError(passIn, passErr, "Invalid email or password.");
-                    setError(emailIn, emailErr, " "); // Border only
+                    setError(emailIn, emailErr, " "); 
                 } else {
-                    alert("Login Successful!");
+                    window.location.href = "dashboard.html"; 
                 }
             }
         });
     }
 
-    //registration  page 
+    //registration page logic
     if (regForm) {
         const nameIn = document.getElementById('regName');
         const emailIn = document.getElementById('regEmail');
@@ -118,7 +110,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const emailStatus = isEmailValid(emailIn.value);
             const passStatus = isPasswordValid(passIn.value);
             const matches = passIn.value === confirmIn.value && confirmIn.value !== "";
-            
             regBtn.disabled = !(nameStatus === "ok" && emailStatus === "ok" && passStatus === "ok" && matches);
         };
 
@@ -129,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
             else setError(nameIn, document.getElementById('nameError'), "");
         });
 
+      
         emailIn.addEventListener('blur', () => {
             const status = isEmailValid(emailIn.value);
             if (status === "required") setError(emailIn, document.getElementById('emailError'), "Email is required.");
@@ -155,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             if (!regBtn.disabled) {
                 document.getElementById('successMsg').classList.remove('d-none');
-                setTimeout(() => { window.location.href = "index.html"; }, 2000);
+                setTimeout(() => { window.location.href = "dashboard.html"; }, 2000);
             }
         });
     }

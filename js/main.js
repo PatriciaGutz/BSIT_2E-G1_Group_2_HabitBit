@@ -283,12 +283,12 @@ window.toggleDone = (i) => {
 window.deleteHabit = (i) => {
     Swal.fire({
         title: 'Delete habit?',
-        text: "You won't be able to revert this!",
+        text: "Are you sure? This action cannot be undone.",
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
         cancelButtonColor: '#333',
-        confirmButtonText: 'Yes, delete it!'
+        confirmButtonText: 'Yes, delete it.'
     }).then((result) => {
         if (result.isConfirmed) {
             habits.splice(i, 1);

@@ -3,7 +3,7 @@
   --hb-teal: #77d0a0;
   --hb-blue: #93a4b1;
   --hb-dark: #333333;
-  --hb-peach: #ffe5d0; /* Added for About Section */
+  --hb-peach: #ffe5d0; /*for about sec */
 }
 
 body {
@@ -166,7 +166,7 @@ body {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
 
-/*EXISTING SECTIONS (CONTACT, GALLERY, SERVICES)*/
+/*contact,gallery,services*/
 .contact-section {
   min-height: 70vh;
 }
@@ -308,4 +308,47 @@ body {
 
 .habit-row:hover {
     background-color: #fafafa;
+}
+/* quote rectangle*/
+.quote-container {
+    background-color: var(--hb-teal);
+    min-height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    transition: background-color 0.3s ease;
+}
+
+.quote-icon-box {
+    background-color: rgba(255, 255, 255, 0.2);
+    width: 55px;
+    height: 55px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+}
+
+.quote-icon-box.top-left {
+    top: 20px;
+    left: 20px;
+}
+
+.quote-icon-box.bottom-right {
+    bottom: 20px;
+    right: 20px;
+    transform: rotate(180deg);
+}
+
+.quote-icon-box i {
+    font-size: 2rem;
+    color: white;
+}
+
+#daily-quote {
+    max-width: 75%;
+    line-height: 1.4;
 }

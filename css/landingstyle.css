@@ -1,3 +1,4 @@
+
 :root {
   --hb-orange: #ffb347;
   --hb-teal: #77d0a0;
@@ -35,7 +36,44 @@ body { font-family: "Inter", sans-serif; background-color: #fafafa; margin: 0; }
   background-color: var(--hb-orange); border: none; color: white;
   font-weight: 700; padding: 14px; border-radius: 12px;
 }
-
 .btn-habitbit:disabled { background-color: #d1d1d1; cursor: not-allowed; }
-
 .text-orange { color: var(--hb-orange) !important; }
+
+.hero-section {
+    padding: 80px 0;
+}
+
+.btn-orange-landing {
+    background-color: var(--hb-orange);
+    color: white;
+    font-weight: 700;
+    border: none;
+    transition: 0.3s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-orange-landing:hover {
+    background-color: #f59e0b;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-outline-teal {
+    border: 2px solid var(--hb-teal);
+    color: var(--hb-teal);
+    font-weight: 700;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-outline-teal:hover {
+    background-color: var(--hb-teal);
+    color: white;
+}
+
+.landing-img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 20px;
+}
