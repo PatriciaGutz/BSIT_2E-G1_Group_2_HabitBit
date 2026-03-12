@@ -352,3 +352,32 @@ body {
     max-width: 75%;
     line-height: 1.4;
 }
+
+.month-box {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 5px;
+    margin: 5px;
+    display: flex;
+    flex-direction: column;
+}
+
+.month-label {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 3px;
+}
+
+.month-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.cal-box {
+    padding: 2px;
+    font-size: 0.75rem;
+    text-align: center;
+    border-radius: 4px;
+}
+
