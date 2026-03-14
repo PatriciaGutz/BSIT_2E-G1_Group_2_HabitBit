@@ -55,6 +55,57 @@ body {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
+.habit-card {
+  position: relative;
+  min-height: 74px;
+}
+
+.habit-card .dropdown-toggle {
+  color: white;
+  border: none;
+  box-shadow: none;
+  padding: 4px 8px;
+}
+
+.habit-card .dropdown-toggle::after {
+  display: none;
+}
+
+.habit-card .dropdown-toggle:focus,
+.habit-card .dropdown-toggle:active {
+  box-shadow: none;
+  border: none;
+}
+
+.habit-title {
+  color: white;
+  font-weight: 700;
+  text-align: left;
+}
+
+.habit-meta {
+  font-size: 0.8rem;
+  opacity: 0.9;
+  text-align: left;
+  color: white;
+}
+
+.habit-card.done-habit .habit-title {
+  text-decoration: line-through;
+  opacity: 0.8;
+}
+
+.habit-card.done-habit {
+  opacity: 0.9;
+}
+
+.habit-card .dropdown-menu {
+  min-width: 140px;
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+}
+
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -109,6 +160,13 @@ body {
 .nav-link.active {
   opacity: 1 !important;
   color: var(--hb-teal) !important;
+}
+
+.nav-active {
+  font-weight: 700;
+  text-decoration: underline !important;
+  text-underline-offset: 4px;
+  text-decoration-thickness: 2px;
 }
 
 .fab-btn {

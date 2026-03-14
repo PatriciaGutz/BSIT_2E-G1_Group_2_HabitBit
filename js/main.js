@@ -118,27 +118,62 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   function renderHabits() {
-    if (!elements.list) return;
-    elements.list.innerHTML = habits.length === 0
-      ? `<p class="text-center text-muted p-4">No habits yet. Tap + to start!</p>`
-      : habits.map((h, i) => `
-        <div class="habit-row d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
-          <div style="max-width: 60%">
-            <div class="fw-bold ${h.done ? 'text-decoration-line-through text-muted' : ''}">
-              ${h.icon || '✨'} ${h.title}
-            </div>
-            <div class="text-muted small">${h.repeat} • ${h.time}</div>
-          </div>
-          <div class="d-flex gap-2">
-            <button class="complete-btn ${h.done ? 'btn-success' : 'btn-outline-success'}" onclick="toggleDone(${i})">
-              ${h.done ? "✓" : "Done"}
-            </button>
-            <button class="btn btn-sm btn-outline-secondary" onclick="editHabit(${i})">✎</button>
-            <button class="btn btn-sm btn-outline-danger" onclick="deleteHabit(${i})">✕</button>
-          </div>
-        </div>`).join('');
+  if (!elements.list) return;
+
+  if (habits.length === 0) {
+    elements.list.innerHTML = `<p class="text-center text-muted p-4">No habits yet. Tap + to start!</p>`;
     updateProgress();
+    return;
   }
+
+  elements.list.innerHTML = habits.map((h, i) => {
+    let colorClass = "bg-success";
+
+    if (i % 4 === 1) colorClass = "bg-warning";
+    else if (i % 4 === 2) colorClass = "bg-danger";
+    else if (i % 4 === 3) colorClass = "bg-info";
+
+    return `
+      <div class="col-6">
+        <div class="habit-card ${colorClass} d-flex justify-content-between align-items-start px-3 py-3 ${h.done ? 'done-habit' : ''}">
+          
+          <div class="d-flex flex-column">
+            <span class="habit-title">${h.icon || '✨'} ${h.title}</span>
+            <span class="habit-meta">${h.repeat} • ${h.time}</span>
+          </div>
+
+          <div class="dropdown">
+            <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-three-dots-vertical"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li>
+                <button class="dropdown-item" onclick="editHabit(${i})">
+                  <i class="bi bi-pencil-square me-2"></i>Edit
+                </button>
+              </li>
+              <li>
+                <button class="dropdown-item" onclick="toggleDone(${i})">
+                <i class="bi ${h.done ? 'bi-x-circle' : 'bi-check-lg'} me-2"></i>${h.done ? 'Mark as Incomplete' : 'Complete'}
+  </button>
+</li>
+                </button>
+              </li>
+              <li>
+                <button class="dropdown-item text-danger" onclick="deleteHabit(${i})">
+                  <i class="bi bi-trash me-2"></i>Delete
+                </button>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  updateProgress();
+}
 
   window.toggleDone = (i) => {
     const todayStr = new Date().toISOString().split('T')[0]; // today's date
