@@ -68,13 +68,58 @@
         </div>
     </main>
 
-    <div class="nav-wrapper">
-        <div class="app-nav d-flex justify-content-around align-items-center shadow-lg">
-            <a href="dashboard.html" class="nav-link active">🏠</a>
-            <div class="fab-btn" onclick="window.location.href='services.html'">+</div>
-            <a href="services.html" class="nav-link text-white">👤</a>
-        </div>
+    <div class="nav-wrapper nav-bar">
+      <div class="app-nav d-flex justify-content-around align-items-center shadow-lg">
+        <div class="nav-indicator"></div>
+        <a href="dashboard.html" class="nav-link" onclick="moveNavIndicator(25)">🏠</a>
+            <div class="fab-container" id="fabMenu">
+            <button class="close-btn" onclick="toggleMenu()">x</button>
+            <button class="sub-btn edit" onclick="openHabitModal()">✎</button>
+            <button class="sub-btn delete" onclick="deleteHabit()">🗑</button>
+
+            <button id="mainBtn" onclick="toggleMenu(); moveNavIndicator(50)">+</button>
     </div>
+        <a href="profile.html" class="nav-link" onclick="moveNavIndicator(70)">👤</a>
+      </div>
+    </div>
+
+<div id="habitModal" class="modal">
+    <div class="modal-content edit-habit">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="h4 fw-bold mb-0">Create new Habit</h2>
+            <button class="btn-close btn-close-white" onclick="closeHabitModal()"></button>
+        </div>
+
+        <div class="d-flex gap-2 mb-3">
+            <div class="bg-white rounded p-2 text-center" style="width: 60px;">
+                <input id="habitIcon" type="text" placeholder="Icon" class="w-100 border-0 text-center" style="outline: none;">
+            </div>
+            <div class="bg-white rounded p-2 flex-grow-1 d-flex align-items-center">
+                <input id="habitTitle" type="text" placeholder="Title" class="w-100 border-0" style="outline: none;">
+                <button type="button" class="btn btn-sm btn-light rounded-circle info-btn-circle" onclick="toggleDesc()">i</button>
+            </div>
+        </div>
+
+        <div id="descBox" class="mb-3" style="display: none;">
+            <textarea id="habitDesc" class="form-control border-0 rounded" placeholder="Description (optional)" rows="2"></textarea>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-white-50 mb-2">
+            <span>Repeat</span>
+            <input id="habitRepeat" type="text" class="bg-transparent border-0 text-white text-end" placeholder="Mon, Wed, Fri">
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-white-50 mb-4">
+            <span>Set Time</span>
+            <input id="habitTime" type="time" class="bg-transparent border-0 text-white text-end" value="07:00">
+        </div>
+
+        <button class="btn btn-warning w-100 rounded-pill fw-bold py-2 shadow-sm" onclick="saveHabit()">Confirm</button>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/main.js"></script>
