@@ -46,53 +46,68 @@
             </div>
          </div>
          <div class="tracker-section pb-5">
-            <div class="bg-white p-3 rounded-4 shadow-sm border">
-               <div class="weekly-tracker bg-white p-3 rounded-4 shadow-sm mb-4">
-                  <div class="d-flex justify-content-between align-items-center mb-3">
-                     <button class="btn btn-link text-dark fw-bold text-decoration-none" onclick="changeWeek(-1)">❮</button>
-                     <h5 class="fw-bold mb-0" id="week-label">Week of Jan 4, 2026</h5>
-                     <button class="btn btn-link text-dark fw-bold text-decoration-none" onclick="changeWeek(1)">❯</button>
+    <div class="bg-white p-3 rounded-4 shadow-sm border">
+        
+        <div class="weekly-tracker bg-white p-3 rounded-4 shadow-sm mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <button class="btn btn-link text-dark fw-bold text-decoration-none" onclick="changeWeek(-1)">❮</button>
+                <h5 class="fw-bold mb-0" id="week-label">Week of Jan 4, 2026</h5>
+                <button class="btn btn-link text-dark fw-bold text-decoration-none" onclick="changeWeek(1)">❯</button>
+            </div>
+            <div id="weekly-grid" class="d-flex justify-content-around align-items-center">
+                </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">Current Habits</h5>
+            <a href="profile.html" class="text-decoration-none text-orange fw-bold">View all ></a>
+        </div>
+
+        <div id="habit-list" class="habit-grid mb-5"></div>
+
+        <hr class="my-5">
+
+        <div class="calendar-section pb-5">
+            <div class="d-flex justify-content-center mb-3">
+                <div class="btn-group bg-light p-1 rounded-pill border">
+                    <button class="btn btn-sm rounded-pill active px-4" id="viewMonth">Month</button>
+                    <button class="btn btn-sm rounded-pill px-4" id="viewYear">Year</button>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-center align-items-center mb-3">
+                <button class="btn btn-link text-dark fw-bold text-decoration-none" onclick="changeMonth(-1)">❮</button>
+                <h5 class="fw-bold mb-0 mx-4" id="month-label">January 2026</h5>
+                <button class="btn btn-link text-dark fw-bold text-decoration-none" onclick="changeMonth(1)">❯</button>
+            </div>
+
+            <div class="bg-white p-4 rounded-4 shadow-sm border">
+                <div id="calendar-grid" class="calendar-grid"></div>
+                
+                <div class="mt-4 pt-3 border-top row g-2">
+                    <div class="col-6 d-flex align-items-center small"><span class="legend-dot bg-success"></span> 100%</div>
+                    <div class="col-6 d-flex align-items-center small"><span class="legend-dot bg-info"></span> 75-99%</div>
+                    <div class="col-6 d-flex align-items-center small"><span class="legend-dot bg-warning"></span> 50-74%</div>
+                    <div class="col-6 d-flex align-items-center small"><span class="legend-dot bg-peach"></span> below 50%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+      </div>
+      <div class="nav-wrapper nav-bar">
+         <div class="app-nav d-flex justify-content-around align-items-center shadow-lg">
+            <div class="nav-indicator"></div>
+               <a href="dashboard.html" class="nav-link active" onclick="moveNavIndicator(25)">🏠</a>
+                  <div class="fab-container" id="fabMenu">
+                     <button class="close-btn" onclick="toggleMenu()">x</button>
+                     <button class="sub-btn edit" onclick="openHabitModal()">✎</button>
+                     <button class="sub-btn delete" onclick="deleteHabit()">🗑</button>
+                     <button id="mainBtn" onclick="toggleMenu(); moveNavIndicator(50)">+</button>
                   </div>
-                  <div id="weekly-grid" class="d-flex justify-content-around align-items-center"></div>
-               </div>
-               <div class="d-flex justify-content-between align-items-center mb-3">
-                  <h5 class="fw-bold mb-0">Current Habits</h5>
-                  <a href="services.html" class="text-decoration-none text-orange fw-bold">View all ></a>
-               </div>
-               <div class="row g-3 mb-5" id="habit-list"></div>
-               <hr class="my-5">
-               <div class="tracker-section pb-5">
-                  <div class="d-flex justify-content-center mb-3">
-                     <div class="btn-group bg-light p-1 rounded-pill border">
-                        <button class="btn btn-sm rounded-pill active px-4" id="viewMonth">Month</button>
-                        <button class="btn btn-sm rounded-pill px-4" id="viewYear">Year</button>
-                     </div>
-                  </div>
-                  <div class="d-flex justify-content-center align-items-center mb-3">
-                     <button class="btn btn-link text-dark fw-bold text-decoration-none" onclick="changeMonth(-1)">❮</button>
-                     <h5 class="fw-bold mb-0 mx-4" id="month-label">January 2026</h5>
-                     <button class="btn btn-link text-dark fw-bold text-decoration-none" onclick="changeMonth(1)">❯</button>
-                  </div>
-                  <div class="bg-white p-4 rounded-4 shadow-sm border">
-                     <div id="calendar-grid" class="calendar-grid"></div>
-                     <div class="mt-4 pt-3 border-top row g-2">
-                        <div class="col-6 d-flex align-items-center small"><span class="legend-dot bg-success"></span> 100%</div>
-                        <div class="col-6 d-flex align-items-center small"><span class="legend-dot bg-info"></span> 75-99%</div>
-                        <div class="col-6 d-flex align-items-center small"><span class="legend-dot bg-warning"></span> 50-74%</div>
-                        <div class="col-6 d-flex align-items-center small"><span class="legend-dot bg-peach"></span> below 50%</div>
-                     </div>
-                  </div>
-               </div>
+               <a href="profile.html" class="nav-link" onclick="moveNavIndicator(70)">👤</a>
             </div>
          </div>
-      </div>
-      <div class="nav-wrapper">
-         <div class="app-nav d-flex justify-content-around align-items-center shadow-lg">
-            <a href="dashboard.html" class="nav-link active">🏠</a>
-            <div class="fab-btn" onclick="openHabitModal()">+</div>
-            <a href="services.html" class="nav-link text-white">👤</a>
-         </div>
-      </div>
       <div id="habitModal" class="modal">
          <div class="modal-content edit-habit">
             <div class="d-flex justify-content-between align-items-center mb-4">

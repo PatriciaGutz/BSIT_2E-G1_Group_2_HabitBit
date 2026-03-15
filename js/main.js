@@ -1,5 +1,21 @@
 document.addEventListener("DOMContentLoaded", () => {
 
+     /* -------- COLOR PALETTE -------- */
+const HABIT_PALETTE = ["#77d0a0", "#ffb347", "#2ca3ff", "#ffccbc", "#b2ebf2", "#8b4dff"];
+
+    /* -------- DAILY RESET LOGIC -------- */
+window.checkAndResetDailyHabits = function() {
+    const todayStr = new Date().toDateString();
+    const lastResetDate = localStorage.getItem('lastResetDate');
+
+    if (lastResetDate !== todayStr) {
+        habits.forEach(habit => { habit.done = false; }); // Reset status
+        localStorage.setItem('habits', JSON.stringify(habits));
+        localStorage.setItem('lastResetDate', todayStr);
+    }
+};
+
+
   /* -------- DAILY QUOTE -------- */
   const quotes = [
     "Philippians 4:13 - I can do all things through Christ who strengthens me.",
@@ -33,6 +49,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let habits = JSON.parse(localStorage.getItem('habits')) || [];
   let editIndex = null;
 
+  checkAndResetDailyHabits();
+
   const elements = {
     modal: document.getElementById("habitModal"),
     list: document.getElementById("habit-list"),
@@ -49,13 +67,86 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  window.openHabitModal = () => {
-    if (elements.modal) {
-      elements.modal.style.display = "flex";
-      elements.modalTitle.innerText = "Create new Habit";
+    window.updateProgress = () => {
+    if (!elements.bar) return;
+    const done = habits.filter(h => h.done).length;
+    const total = habits.length;
+    const percent = total ? Math.round((done / total) * 100) : 0;
+
+    elements.bar.style.width = `${percent}%`;
+    elements.count.innerText = `${done}/${total} Habits done`;
+    elements.text.innerText = `${percent}%`;
+  }
+
+
+window.getHabitColor = (percent) => {
+    if (percent >= 100) return HABIT_COLORS.FULL;
+    if (percent >= 75)  return HABIT_COLORS.HIGH;
+    if (percent >= 50)  return HABIT_COLORS.MID;
+    return HABIT_COLORS.LOW;
+};
+
+window.renderHabits = function() {
+    if (!elements.list) return;
+
+    if (habits.length === 0) {
+        elements.list.innerHTML = `<p class="text-center text-muted p-4">No habits yet. Tap + to start!</p>`;
+        updateProgress();
+        return;
     }
+
+    elements.list.innerHTML = habits.map((h, i) => {
+        const progress = h.progress !== undefined ? h.progress : (h.done ? 100 : 0);
+        const bgColor = getHabitColor(progress);
+        const textClass = (progress >= 75) ? 'text-white' : 'text-dark';
+
+        return `
+        <div class="habit-card ${textClass}" style="background-color: ${bgColor}">
+            <div class="card-content d-flex align-items-center gap-2">
+                <span class="fs-3">${h.icon || '✨'}</span>
+                <div class="d-flex flex-column text-start">
+                    <span class="fw-bold">${h.title}</span>
+                    <small style="opacity: 0.8">${h.repeat} • ${h.time}</small>
+                </div>
+            </div>
+
+            <div class="dropdown">
+                <button class="btn dropdown-toggle border-0" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-three-dots-vertical"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><button class="dropdown-item" onclick="editHabit(${i})"><i class="bi bi-pencil me-2"></i>Edit</button></li>
+                    <li><button class="dropdown-item" onclick="toggleDone(${i})"><i class="bi bi-check2-circle me-2"></i>Status</button></li>
+                    <li><button class="dropdown-item text-danger" onclick="deleteHabit(${i})"><i class="bi bi-trash me-2"></i>Delete</button></li>
+                </ul>
+            </div>
+        </div>`;
+    }).join('');
+
+    updateProgress();
   };
 
+
+  window.toggleMenu = () => {
+    const fabMenu = document.getElementById("fabMenu");
+    if (fabMenu) { fabMenu.classList.toggle("open");}
+  };
+
+  window.openHabitModal = () => {
+    const fabMenu = document.getElementById("fabMenu");
+    if (fabMenu) fabMenu.classList.remove("open");
+
+    if (elements.modal) {
+        elements.modal.style.display = "flex";
+        elements.modalTitle.innerText = "Create new Habit";
+        
+        editIndex = null; 
+        
+        Object.values(elements.inputs).forEach(input => {
+            if (input) input.value = "";
+        });
+    }
+};
   window.closeHabitModal = () => {
     if (elements.modal) elements.modal.style.display = "none";
     editIndex = null;
@@ -88,24 +179,23 @@ document.addEventListener("DOMContentLoaded", () => {
     if (habit.desc && descBox) descBox.style.display = "block";
   };
 
-  window.saveHabit = () => {
+// 2. Update saveHabit to include a random color for NEW habits
+window.saveHabit = () => {
     const { icon, title, repeat, time, desc } = elements.inputs;
 
-    if (!icon.value.trim()) {
-      return Swal.fire({ icon: 'error', title: 'Missing a bit!', text: 'Please enter a habit icon(emoji).', confirmButtonColor: '#ffb347' });
-    }
-
     if (!title.value.trim()) {
-      return Swal.fire({ icon: 'error', title: 'Missing a bit!', text: 'Please enter a habit title.', confirmButtonColor: '#ffb347' });
+        return Swal.fire({ icon: 'error', title: 'Missing title!' });
     }
 
     const habitData = {
-      icon: icon.value.trim(),
-      title: title.value.trim(),
-      repeat: repeat.value || "Daily",
-      time: time.value || "12:00",
-      desc: desc.value,
-      done: editIndex !== null ? habits[editIndex].done : false
+        icon: icon.value.trim() || "✨",
+        title: title.value.trim(),
+        repeat: repeat.value || "Daily",
+        time: time.value || "12:00",
+        desc: desc.value,
+        done: editIndex !== null ? habits[editIndex].done : false,
+        // Assign a random color if it's a new habit, otherwise keep the old one
+        color: editIndex !== null ? habits[editIndex].color : HABIT_PALETTE[Math.floor(Math.random() * HABIT_PALETTE.length)]
     };
 
     if (editIndex === null) habits.push(habitData);
@@ -114,66 +204,55 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.setItem('habits', JSON.stringify(habits));
     closeHabitModal();
     renderHabits();
-    Swal.fire({ icon: 'success', title: 'Saved!', showConfirmButton: false, timer: 1500 });
-  };
+};
 
-  function renderHabits() {
-  if (!elements.list) return;
+// 3. Update renderHabits to use the stored color and cross out text
+window.renderHabits = function() {
+    if (!elements.list) return;
+    if (habits.length === 0) {
+        elements.list.innerHTML = `<div class="text-center text-muted p-5 w-100">No habits yet. Tap + to start!</div>`;
+        updateProgress();
+        return;
+    }
 
-  if (habits.length === 0) {
-    elements.list.innerHTML = `<p class="text-center text-muted p-4">No habits yet. Tap + to start!</p>`;
+    let html = '<div class="row g-3">';
+    html += habits.map((h, i) => {
+        // We use the color stored in the habit object
+        const bgColor = h.color || HABIT_PALETTE[0]; 
+        const isDoneClass = h.done ? 'crossed-out' : '';
+
+        return `
+        <div class="col-6">
+            <div class="habit-card" style="background-color: ${bgColor}">
+                <div class="habit-text-section ${isDoneClass}">
+                    <div class="fw-bold text-truncate">${h.icon} ${h.title}</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">
+                        <i class="bi bi-calendar"></i> Repeat: ${h.repeat}
+                    </div>
+                    <small style="opacity: 0.8">${h.time}</small>
+                </div>
+
+                <div class="dropdown">
+                    <button class="btn btn-link text-dark p-0 border-0" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-three-dots-vertical fs-5"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                        <li><button class="dropdown-item" onclick="editHabit(${i})"><i class="bi bi-pencil-square me-2"></i>Edit</button></li>
+                        <li><button class="dropdown-item" onclick="toggleDone(${i})">
+                            <i class="bi ${h.done ? 'bi-x-circle' : 'bi-check-circle'} me-2"></i>
+                            ${h.done ? 'Mark Incomplete' : 'Mark as Complete'}
+                        </button></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><button class="dropdown-item text-danger" onclick="deleteHabit(${i})"><i class="bi bi-trash3 me-2"></i>Delete</button></li>
+                    </ul>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+    html += '</div>';
+    elements.list.innerHTML = html;
     updateProgress();
-    return;
-  }
-
-  elements.list.innerHTML = habits.map((h, i) => {
-    let colorClass = "bg-success";
-
-    if (i % 4 === 1) colorClass = "bg-warning";
-    else if (i % 4 === 2) colorClass = "bg-danger";
-    else if (i % 4 === 3) colorClass = "bg-info";
-
-    return `
-      <div class="col-6">
-        <div class="habit-card ${colorClass} d-flex justify-content-between align-items-start px-3 py-3 ${h.done ? 'done-habit' : ''}">
-          
-          <div class="d-flex flex-column">
-            <span class="habit-title">${h.icon || '✨'} ${h.title}</span>
-            <span class="habit-meta">${h.repeat} • ${h.time}</span>
-          </div>
-
-          <div class="dropdown">
-            <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="bi bi-three-dots-vertical"></i>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end">
-              <li>
-                <button class="dropdown-item" onclick="editHabit(${i})">
-                  <i class="bi bi-pencil-square me-2"></i>Edit
-                </button>
-              </li>
-              <li>
-                <button class="dropdown-item" onclick="toggleDone(${i})">
-                <i class="bi ${h.done ? 'bi-x-circle' : 'bi-check-lg'} me-2"></i>${h.done ? 'Mark as Incomplete' : 'Complete'}
-  </button>
-</li>
-                </button>
-              </li>
-              <li>
-                <button class="dropdown-item text-danger" onclick="deleteHabit(${i})">
-                  <i class="bi bi-trash me-2"></i>Delete
-                </button>
-              </li>
-            </ul>
-          </div>
-
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  updateProgress();
-}
+};
 
   window.toggleDone = (i) => {
     const todayStr = new Date().toISOString().split('T')[0]; // today's date
@@ -184,8 +263,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     localStorage.setItem('habits', JSON.stringify(habits));
     renderHabits();
-    buildCalendar();
-    renderWeeklyGrid();
+    window.buildCalendar = buildCalendar;
+    window.renderWeeklyGrid = renderWeeklyGrid;
 }
 
   window.deleteHabit = (i) => {
@@ -215,20 +294,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     localStorage.setItem('habits', JSON.stringify(habits));
     renderHabits();
-    buildCalendar();
-    renderWeeklyGrid();
+    window.buildCalendar = buildCalendar;
+    window.renderWeeklyGrid = renderWeeklyGrid;
 }
-
-  function updateProgress() {
-    if (!elements.bar) return;
-    const done = habits.filter(h => h.done).length;
-    const total = habits.length;
-    const percent = total ? Math.round((done / total) * 100) : 0;
-
-    elements.bar.style.width = `${percent}%`;
-    elements.count.innerText = `${done}/${total} Habits done`;
-    elements.text.innerText = `${percent}%`;
-  }
 
   /* -------- LOGIN STREAK -------- */
   function updateConsecutiveDays() {
@@ -421,3 +489,35 @@ document.addEventListener("DOMContentLoaded", () => {
   renderWeeklyGrid();
 
 });
+
+/* -------- Nav bar dash icon --------*/
+window.moveNavIndicator = (percent) => {
+    const navBar = document.querySelector('.app-nav');
+    if (navBar) {
+        navBar.style.setProperty('--active-offset', percent + '%');
+    }
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+    const path = window.location.pathname;
+
+    if (path.includes("profile.html")) {
+        moveNavIndicator(72.5);
+    } 
+    else if (path.includes("dashboard.html")) {
+        moveNavIndicator(27.5);
+    }
+    else {
+        // Default to + icon if no specific page matches
+        moveNavIndicator(50);
+    }
+});
+
+/* -------- HABIT COLOR LOGIC -------- */
+
+function getHabitColor(percent) {
+        if (percent >= 100) return COLORS.FULL;
+        if (percent >= 75)  return COLORS.HIGH;
+        if (percent >= 50)  return COLORS.MID;
+        return COLORS.LOW;
+    }
