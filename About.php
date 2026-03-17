@@ -23,7 +23,7 @@
   <body>
     <nav class="navbar navbar-expand-lg navbar-light custom-navbar">
       <div class="container-fluid">
-        <a class="navbar-brand d-flex align-items-center" href="dashboard.html">
+        <a class="navbar-brand d-flex align-items-center" href="dashboard.php">
           <img
             src="images/logo.png"
             alt="HabitBit Logo"
@@ -33,17 +33,17 @@
           <span class="fw-bold text-white fs-3">HabitBit</span>
         </a>
         <div class="d-flex text-white small">
-          <a href="dashboard.html" class="text-white text-decoration-none me-3">Home</a>
-          <a href="contact.html" class="text-white text-decoration-none me-3"
+          <a href="dashboard.php" class="text-white text-decoration-none me-3">Home</a>
+          <a href="contact.php" class="text-white text-decoration-none me-3"
             >Contact</a
           >
           <a
-            href="about.html"
+            href="about.php"
             class="text-white text-decoration-none me-3 nav-active"
             >About</a
           >
           <a
-          href="gallery.html"
+          href="gallery.php"
           class="text-white text-decoration-none me-3"
           >Gallery</a>
          <a href="#" class="text-white text-decoration-none">🔔</a>

@@ -4,15 +4,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const setError = (input, msgElement, message) => {
         if (message) {
-            input.classList.add('is-invalid-input');
+            input.classList.add('is-invalid');
             msgElement.innerText = message;
         } else {
-            input.classList.remove('is-invalid-input');
+            input.classList.remove('is-invalid');
             msgElement.innerText = "";
         }
     };
 
-    //toggle for pass
     const setupToggle = (toggleId, inputId) => {
         const toggle = document.getElementById(toggleId);
         const input = document.getElementById(inputId);
@@ -24,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     };
+
     setupToggle('toggleLoginPass', 'loginPassword');
     setupToggle('toggleRegPass', 'regPassword');
     setupToggle('toggleConfirmPass', 'regConfirmPassword');
@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return "ok";
     }
 
-    //login page logic
+    /* --Login page logic-- */
     if (loginForm) {
         const emailIn = document.getElementById('loginEmail');
         const passIn = document.getElementById('loginPassword');
@@ -83,44 +83,64 @@ document.addEventListener('DOMContentLoaded', () => {
 
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const emailStatus = isEmailValid(emailIn.value);
-            const passStatus = passIn.value.length > 0;
+            const storedUser = JSON.parse(localStorage.getItem('registeredUser'));
 
-            if (emailStatus === "ok" && passStatus) {
-                if (passIn.value !== "Admin123") {
-                    setError(passIn, passErr, "Invalid email or password.");
-                    setError(emailIn, emailErr, " "); 
-                } else {
-                    window.location.href = "dashboard.html"; 
-                }
+            // 1. Check if ANY user exists
+            if (!storedUser) {
+                setError(emailIn, emailErr, "No account found. Please register first.");
+                return;
+            }
+
+            // 2. Check if the SPECIFIC email entered matches the stored email
+            if (emailIn.value !== storedUser.email) {
+                setError(emailIn, emailErr, "No account found with this email.");
+                setError(passIn, passErr, ""); 
+                return;
+            }
+
+            // 3. Email is correct, now check password
+            if (passIn.value === storedUser.password) {
+                window.location.href = "dashboard.html";
+            } else {
+                setError(passIn, passErr, "Incorrect password.");
+                setError(emailIn, emailErr, ""); 
             }
         });
     }
 
-    //registration page logic
+    /* --Register page logic-- */
     if (regForm) {
-        const nameIn = document.getElementById('regName');
+        const nameIn = document.getElementById('regFName');
+        const lastNameIn = document.getElementById('regLName'); // Fixed ID
         const emailIn = document.getElementById('regEmail');
         const passIn = document.getElementById('regPassword');
         const confirmIn = document.getElementById('regConfirmPassword');
         const regBtn = document.getElementById('regBtn');
 
         const validateRegBtn = () => {
-            const nameStatus = isNameValid(nameIn.value);
+            const FnameStatus = isNameValid(nameIn.value);
+            const LNameStatus = isNameValid(lastNameIn.value);
             const emailStatus = isEmailValid(emailIn.value);
             const passStatus = isPasswordValid(passIn.value);
             const matches = passIn.value === confirmIn.value && confirmIn.value !== "";
-            regBtn.disabled = !(nameStatus === "ok" && emailStatus === "ok" && passStatus === "ok" && matches);
+            
+            regBtn.disabled = !(FnameStatus === "ok" && LNameStatus === "ok" && emailStatus === "ok" && passStatus === "ok" && matches);
         };
 
         nameIn.addEventListener('blur', () => {
             const status = isNameValid(nameIn.value);
-            if (status === "required") setError(nameIn, document.getElementById('nameError'), "Name is required.");
+            if (status === "required") setError(nameIn, document.getElementById('nameError'), "First Name is required.");
             else if (status === "invalid") setError(nameIn, document.getElementById('nameError'), "Letters only, min 3 chars.");
             else setError(nameIn, document.getElementById('nameError'), "");
         });
 
-      
+        lastNameIn.addEventListener('blur', () => {
+            const status = isNameValid(lastNameIn.value);
+            if (status === "required") setError(lastNameIn, document.getElementById('lastNameError'), "Last Name is required.");
+            else if (status === "invalid") setError(lastNameIn, document.getElementById('lastNameError'), "Letters only, min 3 chars.");
+            else setError(lastNameIn, document.getElementById('lastNameError'), "");
+        });
+
         emailIn.addEventListener('blur', () => {
             const status = isEmailValid(emailIn.value);
             if (status === "required") setError(emailIn, document.getElementById('emailError'), "Email is required.");
@@ -131,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
         passIn.addEventListener('blur', () => {
             const status = isPasswordValid(passIn.value);
             if (status === "required") setError(passIn, document.getElementById('passError'), "Password is required.");
-            else if (status === "invalid") setError(passIn, document.getElementById('passError'), "Must be 8+ chars, with 1 Upper, 1 Lower, and 1 Num.");
+            else if (status === "invalid") setError(passIn, document.getElementById('passError'), "Must be 8+ chars, 1 Upper, 1 Lower, 1 Num.");
             else setError(passIn, document.getElementById('passError'), "");
         });
 
@@ -141,11 +161,16 @@ document.addEventListener('DOMContentLoaded', () => {
             else setError(confirmIn, document.getElementById('confirmError'), "");
         });
 
-        [nameIn, emailIn, passIn, confirmIn].forEach(el => el.addEventListener('input', validateRegBtn));
+        [nameIn, lastNameIn, emailIn, passIn, confirmIn].forEach(el => el.addEventListener('input', validateRegBtn));
 
         regForm.addEventListener('submit', (e) => {
             e.preventDefault();
             if (!regBtn.disabled) {
+                localStorage.setItem('registeredUser', JSON.stringify({
+                    email: emailIn.value,
+                    password: passIn.value
+                }));
+
                 document.getElementById('successMsg').classList.remove('d-none');
                 setTimeout(() => { window.location.href = "dashboard.html"; }, 2000);
             }

@@ -12,15 +12,15 @@
    <body>
       <nav class="navbar navbar-expand-lg navbar-light custom-navbar">
          <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" href="dashboard.html">
+            <a class="navbar-brand d-flex align-items-center" href="dashboard.php">
             <img src="images/logo.png" alt="HabitBit Logo" height="40" class="me-2">
             <span class="fw-bold text-white fs-3">HabitBit</span>
             </a>
             <div class="d-flex text-white small">
-            <a href="dashboard.html" class="text-white text-decoration-none me-3 nav-active">Home</a>
-               <a href="contact.html" class="text-white text-decoration-none me-3">Contact</a>
-               <a href="about.html" class="text-white text-decoration-none me-3">About</a>
-               <a href="gallery.html" class="text-white text-decoration-none me-3">Gallery</a>
+            <a href="dashboard.php" class="text-white text-decoration-none me-3 nav-active">Home</a>
+               <a href="contact.php" class="text-white text-decoration-none me-3">Contact</a>
+               <a href="about.php" class="text-white text-decoration-none me-3">About</a>
+               <a href="gallery.php" class="text-white text-decoration-none me-3">Gallery</a>
                <a href="#" class="text-white text-decoration-none">🔔</a>
             </div>
          </div>
@@ -60,7 +60,7 @@
 
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="fw-bold mb-0">Current Habits</h5>
-            <a href="profile.html" class="text-decoration-none text-orange fw-bold">View all ></a>
+            <a href="profile.php" class="text-decoration-none text-orange fw-bold">View all ></a>
         </div>
 
         <div id="habit-list" class="habit-grid mb-5"></div>
@@ -98,14 +98,14 @@
       <div class="nav-wrapper nav-bar">
          <div class="app-nav d-flex justify-content-around align-items-center shadow-lg">
             <div class="nav-indicator"></div>
-               <a href="dashboard.html" class="nav-link active" onclick="moveNavIndicator(25)">🏠</a>
+               <a href="dashboard.php" class="nav-link active" onclick="moveNavIndicator(25)">🏠</a>
                   <div class="fab-container" id="fabMenu">
                      <button class="close-btn" onclick="toggleMenu()">x</button>
                      <button class="sub-btn edit" onclick="openHabitModal()">✎</button>
                      <button class="sub-btn delete" onclick="deleteHabit()">🗑</button>
                      <button id="mainBtn" onclick="toggleMenu(); moveNavIndicator(50)">+</button>
                   </div>
-               <a href="profile.html" class="nav-link" onclick="moveNavIndicator(70)">👤</a>
+               <a href="profile.php" class="nav-link" onclick="moveNavIndicator(70)">👤</a>
             </div>
          </div>
       <div id="habitModal" class="modal">

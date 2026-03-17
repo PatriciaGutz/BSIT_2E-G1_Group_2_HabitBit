@@ -11,7 +11,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-light custom-navbar">
         <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" href="index.html">
+            <a class="navbar-brand d-flex align-items-center" href="index.php">
                 <img src="images/logo.png" alt="HabitBit Logo" height="45" class="me-2">
                 <span class="fw-bold text-white fs-2">HabitBit</span>
             </a>
@@ -23,9 +23,14 @@
             <h2 class="fw-bold text-center mb-4">Create Account</h2>
             <form id="regForm" novalidate>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Full Name *</label>
-                    <input type="text" id="regName" class="form-control" placeholder="ex.Juan Dela Cruz">
+                    <label class="form-label fw-semibold">First Name *</label>
+                    <input type="text" id="regFName" class="form-control" placeholder="ex.Juan">
                     <span id="nameError" class="error-msg"></span>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Last Name *</label>
+                    <input type="text" id="regLName" class="form-control" placeholder="ex.Dela Cruz">
+                    <span id="lastNameError" class="error-msg"></span>
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Email Address *</label>
@@ -51,7 +56,7 @@
                 <button type="submit" id="regBtn" class="btn btn-habitbit w-100" disabled>Register</button>
             </form>
             <div id="successMsg" class="alert alert-success mt-3 d-none">✅ Registration successful!</div>
-            <p class="text-center small mt-3">Already have an account? <a href="login.html" class="text-decoration-none text-orange fw-bold">Login here</a></p>
+            <p class="text-center small mt-3">Already have an account? <a href="login.php" class="text-decoration-none text-orange fw-bold">Login here</a></p>
         </div>
     </div>
     <script src="js/landingscript.js"></script>

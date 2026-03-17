@@ -14,21 +14,19 @@
 
     <nav class="navbar navbar-expand-lg navbar-light custom-navbar">
         <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" href="dashboard.html">
+            <a class="navbar-brand d-flex align-items-center" href="index.php">
                 <img src="images/logo.png" alt="HabitBit Logo" height="40" class="me-2">
                 <span class="fw-bold text-white fs-3">HabitBit</span>
             </a>
-            <div class="d-flex text-white small">
-                <a href="dashboard.html" class="text-white text-decoration-none me-3">Home</a>
-                <a href="contact.html" class="text-white text-decoration-none me-3 nav-active">Contact</a>
-                <a href="about.html" class="text-white text-decoration-none me-3">About</a>
-                <a href="gallery.html" class="text-white text-decoration-none me-3">Gallery</a>
-                <a href="#" class="text-white text-decoration-none">🔔</a>
+            <div class="ms-auto">
+                <a href="landingabout.php" class="text-white text-decoration-none me-3">About</a>
+                <a href="landingservices.php" class="text-white text-decoration-none me-3">Services</a>
+                <a href="landingcontact.php" class="text-white text-decoration-none me-3 fw-bold">Contact</a>
             </div>
         </div>
     </nav>
 
-    <!--Contact Section -->
+    <!--conatct infos-->
     <main class="flex-fill contact-section py-5">
         <div class="container contact-container">
             <h2 class="mb-4 fw-bold">Contact Us</h2>
@@ -67,10 +65,13 @@
             </form>
             <div id="formAlert" class="alert alert-success mt-3 d-none" role="alert"></div>
         </div>
-    </main>
+      </main>
+
+    <footer class="py-4 text-center">
+        <p class="text-muted small">&copy; 2026 HabitBit. All rights reserved.</p>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/main.js"></script>
-
 </body>
 </html>

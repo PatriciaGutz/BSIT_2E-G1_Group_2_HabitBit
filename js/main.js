@@ -1,9 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
-
-     /* -------- COLOR PALETTE -------- */
 const HABIT_PALETTE = ["#77d0a0", "#ffb347", "#2ca3ff", "#ffccbc", "#b2ebf2", "#8b4dff"];
 
-    /* -------- DAILY RESET LOGIC -------- */
 window.checkAndResetDailyHabits = function() {
     const todayStr = new Date().toDateString();
     const lastResetDate = localStorage.getItem('lastResetDate');
@@ -14,7 +11,6 @@ window.checkAndResetDailyHabits = function() {
         localStorage.setItem('lastResetDate', todayStr);
     }
 };
-
 
   /* -------- DAILY QUOTE -------- */
   const quotes = [
@@ -78,7 +74,6 @@ window.checkAndResetDailyHabits = function() {
     elements.text.innerText = `${percent}%`;
   }
 
-
 window.getHabitColor = (percent) => {
     if (percent >= 100) return HABIT_COLORS.FULL;
     if (percent >= 75)  return HABIT_COLORS.HIGH;
@@ -125,7 +120,6 @@ window.renderHabits = function() {
 
     updateProgress();
   };
-
 
   window.toggleMenu = () => {
     const fabMenu = document.getElementById("fabMenu");
@@ -179,7 +173,6 @@ window.renderHabits = function() {
     if (habit.desc && descBox) descBox.style.display = "block";
   };
 
-// 2. Update saveHabit to include a random color for NEW habits
 window.saveHabit = () => {
     const { icon, title, repeat, time, desc } = elements.inputs;
 
@@ -194,7 +187,7 @@ window.saveHabit = () => {
         time: time.value || "12:00",
         desc: desc.value,
         done: editIndex !== null ? habits[editIndex].done : false,
-        // Assign a random color if it's a new habit, otherwise keep the old one
+       //for new color of habits
         color: editIndex !== null ? habits[editIndex].color : HABIT_PALETTE[Math.floor(Math.random() * HABIT_PALETTE.length)]
     };
 
@@ -206,7 +199,7 @@ window.saveHabit = () => {
     renderHabits();
 };
 
-// 3. Update renderHabits to use the stored color and cross out text
+// Update renderHabits 
 window.renderHabits = function() {
     if (!elements.list) return;
     if (habits.length === 0) {
@@ -217,7 +210,6 @@ window.renderHabits = function() {
 
     let html = '<div class="row g-3">';
     html += habits.map((h, i) => {
-        // We use the color stored in the habit object
         const bgColor = h.color || HABIT_PALETTE[0]; 
         const isDoneClass = h.done ? 'crossed-out' : '';
 
@@ -483,14 +475,14 @@ window.renderHabits = function() {
   if(viewMonthBtn) viewMonthBtn.addEventListener("click",()=>toggleCalendarView('month'));
   if(viewYearBtn) viewYearBtn.addEventListener("click",()=>toggleCalendarView('year'));
 
-  /* -------- INITIAL RENDER -------- */
+  /* --initial render-- */
   renderHabits();
   buildCalendar();
   renderWeeklyGrid();
 
 });
 
-/* -------- Nav bar dash icon --------*/
+/* -- Nav bar dash icon --*/
 window.moveNavIndicator = (percent) => {
     const navBar = document.querySelector('.app-nav');
     if (navBar) {
@@ -513,7 +505,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-/* -------- HABIT COLOR LOGIC -------- */
+/* -------- colors of habit logic-------- */
 
 function getHabitColor(percent) {
         if (percent >= 100) return COLORS.FULL;

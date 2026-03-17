@@ -23,24 +23,20 @@
   <body>
     <nav class="navbar navbar-expand-lg navbar-light custom-navbar">
       <div class="container-fluid">
-        <a class="navbar-brand d-flex align-items-center" href="index.html">
+        <a class="navbar-brand d-flex align-items-center" href="index.php">
           <img
             src="images/logo.png"
             alt="HabitBit Logo"
             height="40"
             class="me-2"
-          />
+          >
           <span class="fw-bold text-white fs-3">HabitBit</span>
-        </a>
-        <div class="d-flex text-white small">
-          <a href="landingcontact.html" class="text-white text-decoration-none me-3"
-            >Contact</a
-          >
-          <a
-            href="landingabout.html"
-            class="text-white text-decoration-none me-3 fw-bold"
-            >About</a
-          >
+          </a>
+            <div class="ms-auto">
+                <a href="landingabout.php" class="text-white text-decoration-none me-3 fw-bold">About</a>
+                <a href="landingservices.php" class="text-white text-decoration-none me-3">Services</a>
+                <a href="landingcontact.php" class="text-white text-decoration-none me-3">Contact</a>
+            </div>
         </div>
       </div>
     </nav>
@@ -106,9 +102,9 @@
       </section>
     </main>
 
-   <footer class="bg-dark text-white text-center py-3 mt-auto">
-      <p class="mb-0">&copy; 2026 HabitBit. All rights reserved.</p>
-    </footer> 
+    <footer class="py-4 text-center">
+        <p class="text-muted small">&copy; 2026 HabitBit. All rights reserved.</p>
+    </footer>
 
     <script src="js/main.js"></script>
   </body>

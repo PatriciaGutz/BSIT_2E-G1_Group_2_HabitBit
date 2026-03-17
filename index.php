@@ -12,13 +12,14 @@
 
     <nav class="navbar navbar-expand-lg navbar-light custom-navbar">
         <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" href="index.html">
+            <a class="navbar-brand d-flex align-items-center" href="index.php">
                 <img src="images/logo.png" alt="HabitBit Logo" height="40" class="me-2">
                 <span class="fw-bold text-white fs-3">HabitBit</span>
             </a>
             <div class="ms-auto">
-                <a href="landingabout.html" class="text-white text-decoration-none me-3">About</a>
-                <a href="landingcontact.html" class="text-white text-decoration-none me-3">Contact</a>
+                <a href="landingabout.php" class="text-white text-decoration-none me-3">About</a>
+                <a href="landingservices.php" class="text-white text-decoration-none me-3">Services</a>
+                <a href="landingcontact.php" class="text-white text-decoration-none me-3">Contact</a>
             </div>
         </div>
     </nav>
@@ -31,11 +32,11 @@
                     <span style="color: var(--hb-teal)">Improve tomorrow.</span>
                 </h1>
                 <p class="lead text-muted mb-5">
-                   The Habit tracker that helps you build consistency and achieve your goals daily.
+                   HabitBit is a web-based habit planning and tracking application that helps users monitor daily habits, build consistency, and improve their routines through simple and organized tracking.
                 </p>
                 <div class="d-flex gap-3">
-                    <a href="login.html" class="btn btn-orange-landing px-5 py-3 rounded-pill shadow">Login</a>
-                    <a href="register.html" class="btn btn-outline-teal px-5 py-3 rounded-pill">Register</a>
+                    <a href="login.php" class="btn btn-orange-landing px-5 py-3 rounded-pill shadow">Login</a>
+                    <a href="register.php" class="btn btn-outline-teal px-5 py-3 rounded-pill">Register</a>
                 </div>
             </div>
             

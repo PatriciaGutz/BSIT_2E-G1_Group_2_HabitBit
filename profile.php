@@ -14,14 +14,14 @@
 
 <nav class="navbar navbar-expand-lg navbar-light custom-navbar">
   <div class="container-fluid">
-    <a class="navbar-brand d-flex align-items-center" href="dashboard.html">
+    <a class="navbar-brand d-flex align-items-center" href="dashboard.php">
       <img src="images/logo.png" alt="HabitBit Logo" height="40" class="me-2">
       <span class="fw-bold text-white fs-3">HabitBit </span>
     </a>
     <div class="d-flex text-white small gap-3">
-      <a href="contact.html" class="text-white text-decoration-none">Contact</a>
-      <a href="about.html" class="text-white text-decoration-none">About</a>
-      <a href="gallery.html" class="text-white text-decoration-none me-3">Gallery</a>
+      <a href="contact.php" class="text-white text-decoration-none">Contact</a>
+      <a href="about.php" class="text-white text-decoration-none">About</a>
+      <a href="gallery.php" class="text-white text-decoration-none me-3">Gallery</a>
       <a href="#" class="text-white text-decoration-none">🔔</a>
       
     </div>
@@ -40,7 +40,7 @@
                 <small class="text-muted">🖂 abcde@gmail.com</small>
             </div>
         </div>
-       <a href="index.html" class="btn btn-sm btn-outline-danger rounded-pill px-3">Log out ➜</a>
+       <a href="index.php" class="btn btn-sm btn-outline-danger rounded-pill px-3">Log out ➜</a>
     </div>
 
     <div class="bg-white p-4 rounded-4 shadow-sm border mb-4 mx-md-4">
@@ -70,7 +70,7 @@
 <div class="nav-wrapper nav-bar">
       <div class="app-nav d-flex justify-content-around align-items-center shadow-lg">
         <div class="nav-indicator"></div>
-        <a href="dashboard.html" class="nav-link" onclick="moveNavIndicator(25)">🏠</a>
+        <a href="dashboard.php" class="nav-link" onclick="moveNavIndicator(25)">🏠</a>
             <div class="fab-container" id="fabMenu">
             <button class="close-btn" onclick="toggleMenu()">x</button>
             <button class="sub-btn edit" onclick="openHabitModal()">✎</button>
@@ -78,7 +78,7 @@
 
             <button id="mainBtn" onclick="toggleMenu(); moveNavIndicator(50)">+</button>
     </div>
-        <a href="profile.html" class="nav-link active" onclick="moveNavIndicator(70)">👤</a>
+        <a href="profile.php" class="nav-link active" onclick="moveNavIndicator(70)">👤</a>
       </div>
     </div>
 

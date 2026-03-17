@@ -12,7 +12,7 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-light custom-navbar">
         <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" href="index.html">
+            <a class="navbar-brand d-flex align-items-center" href="index.php">
                 <img src="images/logo.png" alt="HabitBit Logo" height="45" class="me-2">
                 <span class="fw-bold text-white fs-2">HabitBit</span>
             </a>
@@ -48,3 +48,6 @@
     <script src="js/landingscript.js"></script>
 </body>
 </html>
+
+<!-- Sanaakonalang12 -->
+<!-- Inihawnadinosaur12 -->
