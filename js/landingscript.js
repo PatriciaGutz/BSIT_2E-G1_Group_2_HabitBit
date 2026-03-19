@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 3. Email is correct, now check password
             if (passIn.value === storedUser.password) {
-                window.location.href = "dashboard.html";
+                window.location.href = "dashboard.php";
             } else {
                 setError(passIn, passErr, "Incorrect password.");
                 setError(emailIn, emailErr, ""); 
@@ -167,13 +167,16 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             if (!regBtn.disabled) {
                 localStorage.setItem('registeredUser', JSON.stringify({
-                    email: emailIn.value,
-                    password: passIn.value
+                firstName: nameIn.value,
+                lastName: lastNameIn.value,
+                email: emailIn.value,
+                password: passIn.value
                 }));
 
                 document.getElementById('successMsg').classList.remove('d-none');
-                setTimeout(() => { window.location.href = "dashboard.html"; }, 2000);
+                setTimeout(() => { window.location.href = "dashboard.php"; }, 2000);
             }
         });
     }
+
 });

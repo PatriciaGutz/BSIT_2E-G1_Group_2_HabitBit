@@ -41,7 +41,7 @@
                 <button type="submit" id="loginBtn" class="btn btn-habitbit w-100 mt-2" disabled>Login</button>
             </form>
             <div class="text-center mt-4">
-                <p class="small mb-1">Don't have an account? <a href="register.html" class="text-orange fw-bold text-decoration-none">Register here</a></p>
+                <p class="small mb-1">Don't have an account? <a href="register.php" class="text-orange fw-bold text-decoration-none">Register here</a></p>
             </div>
         </div>
     </div>

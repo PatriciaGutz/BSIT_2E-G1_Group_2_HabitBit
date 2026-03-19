@@ -493,10 +493,10 @@ window.moveNavIndicator = (percent) => {
 document.addEventListener("DOMContentLoaded", () => {
     const path = window.location.pathname;
 
-    if (path.includes("profile.html")) {
+    if (path.includes("profile.php")) {
         moveNavIndicator(72.5);
     } 
-    else if (path.includes("dashboard.html")) {
+    else if (path.includes("dashboard.php")) {
         moveNavIndicator(27.5);
     }
     else {

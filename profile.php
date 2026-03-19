@@ -1,5 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const user = JSON.parse(localStorage.getItem('registeredUser'));
+
+    if (!user) {
+        console.log("No user found in localStorage");
+        return;
+    }
+
+    const fullName = (user.firstName || "") + " " + (user.lastName || "");
+
+    document.getElementById("profileName").innerText = fullName;
+    document.getElementById("profileEmail").innerText = "🖂 " + user.email;
+
+    document.getElementById("profileAvatar").src =
+        "https://ui-avatars.com/api/?name=" + encodeURIComponent(fullName) +
+        "&background=77D0A0&color=fff";
+});
+</script>
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -11,7 +30,6 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
 <nav class="navbar navbar-expand-lg navbar-light custom-navbar">
   <div class="container-fluid">
     <a class="navbar-brand d-flex align-items-center" href="dashboard.php">
@@ -33,11 +51,10 @@
     
     <div class="d-flex align-items-center justify-content-between mb-4 px-md-4">
         <div class="d-flex align-items-center gap-3">
-            <img src="https://ui-avatars.com/api/?name=Abcde+F+Ghijaman&background=77D0A0&color=fff" 
-                 class="rounded-circle border shadow-sm" width="75">
+            <img id="profileAvatar" class="rounded-circle border shadow-sm" width="75">
             <div>
-                <h4 class="fw-bold mb-0">Abcde F. Ghijaman</h4>
-                <small class="text-muted">🖂 abcde@gmail.com</small>
+                <h4 id="profileName" class="fw-bold mb-0"></h4>
+                <small id="profileEmail" class="text-muted"></small>
             </div>
         </div>
        <a href="index.php" class="btn btn-sm btn-outline-danger rounded-pill px-3">Log out ➜</a>
