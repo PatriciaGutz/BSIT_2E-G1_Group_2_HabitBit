@@ -1,15 +1,14 @@
 <?php
 session_start();
-include('db_connect.php'); 
+include('db_connect.php');
 
 date_default_timezone_set('Asia/Manila');
 
-// 1. Kunin ang pangalan ng user
-$user_name = isset($_SESSION['firstname']) ? $_SESSION['firstname'] : "User";
 
-// --- DAGDAG: GREETING LOGIC PARA SA ORAS ---
+$user_name = (isset($_SESSION['firstname']) && !empty($_SESSION['firstname'])) ? $_SESSION['firstname'] : "Michael";
+
 $hour = (int)date("H");
-$greeting = "Good evening"; // Default
+$greeting = "Good evening"; 
 
 if ($hour >= 5 && $hour < 12) {
     $greeting = "Good morning";
@@ -18,12 +17,11 @@ if ($hour >= 5 && $hour < 12) {
 } else {
     $greeting = "Good evening";
 }
-// ------------------------------------------
 
-$today_month = date("n"); // 1-12
-$today_date = date("j");  // 1-31
+$today_month = date("n"); 
+$today_date = date("j");  
 
-// 2. Kunin ang bday mula sa session
+// get bday mula session
 $user_bday = isset($_SESSION['birthdate']) ? $_SESSION['birthdate'] : ""; 
 
 $is_birthday = false;
@@ -36,7 +34,7 @@ if (!empty($user_bday)) {
     }
 }
 
-// 3. SPECIAL GREETING LOGIC 
+// SPECIAL GREETING 
 if ($today_month == 12 && $today_date == 25) {
     $display_quote = "🎄 Merry Christmas! Celebrate with joy and better habits!";
 } elseif ($today_month == 1 && $today_date == 1) {
@@ -44,7 +42,7 @@ if ($today_month == 12 && $today_date == 25) {
 } elseif ($is_birthday) {
     $display_quote = "🎂 Happy Birthday, " . $user_name . "! Another year to build great habits!";
 } else {
-    // 4. DATABASE QUOTE LOGIC (Pinned or Random)
+    // 4. DATABASE QUOTE (Pinned or Random)
     $check_selected = mysqli_query($conn, "SELECT quote_text FROM quotes WHERE is_selected = 1 LIMIT 1");
 
     if ($check_selected && mysqli_num_rows($check_selected) > 0) {
@@ -57,7 +55,6 @@ if ($today_month == 12 && $today_date == 25) {
         $display_quote = $row ? $row['quote_text'] : "Believe you can and you're halfway there.";
     }
 }
-?>
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -168,7 +165,7 @@ if ($today_month == 12 && $today_date == 25) {
                      <button class="close-btn" onclick="toggleMenu()">x</button>
                      <button class="sub-btn edit" onclick="openHabitModal()">✎</button>
                      <button class="sub-btn delete" onclick="deleteHabit()">🗑</button>
-                     <button id="mainBtn" onclick="toggleMenu(); moveNavIndicator(50)">+</button>
+                     <button id="mainBtn" onclick="toggleMenu()">+</button>
                   </div>
                <a href="profile.php" class="nav-link" onclick="moveNavIndicator(70)">👤</a>
             </div>
