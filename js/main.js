@@ -1,5 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   /* -------- HABITS LOGIC -------- */
+  let deleteMode = false;
+  let selectedToDelete = [];
   let habits = JSON.parse(localStorage.getItem("habits")) || [];
   let editIndex = null;
 
@@ -23,11 +25,13 @@ document.addEventListener("DOMContentLoaded", () => {
     text: document.getElementById("today-progress-text"),
     modalTitle: document.querySelector("#habitModal h2"),
     inputs: {
-      icon: document.getElementById("habitIcon"),
-      title: document.getElementById("habitTitle"),
-      repeat: document.getElementById("habitRepeat"),
-      time: document.getElementById("habitTime"),
-      desc: document.getElementById("habitDesc"),
+    icon: document.getElementById("habitIcon"),
+    title: document.getElementById("habitTitle"),
+    repeat: document.getElementById("habitRepeat"),
+    hour: document.getElementById("habitHour"),
+    minute: document.getElementById("habitMinute"),
+    period: document.getElementById("habitPeriod"),
+    desc: document.getElementById("habitDesc"),
     },
   };
 
@@ -44,6 +48,11 @@ document.addEventListener("DOMContentLoaded", () => {
       Object.values(elements.inputs).forEach((input) => {
         if (input) input.value = "";
       });
+
+      if (elements.inputs.repeat) elements.inputs.repeat.value = "Daily";
+      if (elements.inputs.hour) elements.inputs.hour.value = "";
+      if (elements.inputs.minute) elements.inputs.minute.value = "";
+      if (elements.inputs.period) elements.inputs.period.value = "AM";
     }
   };
   window.closeHabitModal = () => {
@@ -62,15 +71,28 @@ document.addEventListener("DOMContentLoaded", () => {
       box.style.display = box.style.display === "block" ? "none" : "block";
   };
 
+  if (deleteMode) return;
   window.editHabit = (index) => {
     editIndex = index;
     const habit = habits[index];
 
     if (elements.inputs.icon) elements.inputs.icon.value = habit.icon || "";
-    elements.inputs.title.value = habit.title;
     elements.inputs.repeat.value = habit.repeat;
-    elements.inputs.time.value = habit.time;
     elements.inputs.desc.value = habit.desc || "";
+
+    if (habit.time) {
+      const timeParts = habit.time.split(" ");
+      if (timeParts.length === 2) {
+        const hm = timeParts[0].split(":");
+        const period = timeParts[1];
+
+    if (hm.length === 2) {
+      elements.inputs.hour.value = String(parseInt(hm[0], 10));
+      elements.inputs.minute.value = hm[1];
+      elements.inputs.period.value = period;
+    }
+  }
+}
 
     if (elements.modal) elements.modal.style.display = "flex";
     elements.modalTitle.innerText = "Edit Habit";
@@ -80,78 +102,173 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   window.saveHabit = () => {
-    const { icon, title, repeat, time, desc } = elements.inputs;
+  const { icon, title, repeat, hour, minute, period, desc } = elements.inputs;
 
-    if (!icon.value.trim()) {
-      return Swal.fire({
-        icon: "error",
-        title: "Missing a bit!",
-        text: "Please enter a habit icon(emoji).",
-        confirmButtonColor: "#ffb347",
-      });
-    }
-
-    if (!title.value.trim()) {
-      return Swal.fire({
-        icon: "error",
-        title: "Missing a bit!",
-        text: "Please enter a habit title.",
-        confirmButtonColor: "#ffb347",
-      });
-    }
-
-    const habitData = {
-      icon: icon.value.trim() || "✨",
-      title: title.value.trim(),
-      repeat: repeat.value || "Daily",
-      time: time.value || "12:00",
-      desc: desc.value,
-      done: editIndex !== null ? habits[editIndex].done : false,
-    };
-
-    if (editIndex === null) habits.push(habitData);
-    else habits[editIndex] = habitData;
-
-    localStorage.setItem("habits", JSON.stringify(habits));
-    closeHabitModal();
-    renderHabits();
-    Swal.fire({
-      icon: "success",
-      title: "Saved!",
-      showConfirmButton: false,
-      timer: 1500,
+  if (!icon.value.trim()) {
+    return Swal.fire({
+      icon: "error",
+      title: "Missing a bit!",
+      text: "Please enter a habit icon (emoji).",
+      confirmButtonColor: "#ffb347",
     });
+  }
+
+  if (!title.value.trim()) {
+    return Swal.fire({
+      icon: "error",
+      title: "Missing a bit!",
+      text: "Please enter a habit title.",
+      confirmButtonColor: "#ffb347",
+    });
+  }
+
+  const hourValue = parseInt(hour.value, 10);
+  const minuteValue = parseInt(minute.value, 10);
+
+  if (isNaN(hourValue) || hourValue < 1 || hourValue > 12) {
+    return Swal.fire({
+      icon: "error",
+      title: "Invalid hour",
+      text: "Please enter an hour from 1 to 12.",
+      confirmButtonColor: "#ffb347",
+    });
+  }
+
+  if (isNaN(minuteValue) || minuteValue < 0 || minuteValue > 59) {
+    return Swal.fire({
+      icon: "error",
+      title: "Invalid minute",
+      text: "Please enter minutes from 0 to 59.",
+      confirmButtonColor: "#ffb347",
+    });
+  }
+
+  const formattedTime = `${hourValue}:${String(minuteValue).padStart(2, "0")} ${period.value}`;
+
+  const habitData = {
+    icon: icon.value.trim() || "✨",
+    title: title.value.trim(),
+    repeat: repeat.value || "Daily",
+    time: formattedTime,
+    desc: desc.value || "",
+    done: editIndex !== null ? habits[editIndex].done : false,
   };
+
+  if (editIndex === null) {
+    habits.push(habitData);
+  } else {
+    habits[editIndex] = habitData;
+  }
+
+  localStorage.setItem("habits", JSON.stringify(habits));
+  closeHabitModal();
+  renderHabits();
+
+  Swal.fire({
+    icon: "success",
+    title: "Saved!",
+    showConfirmButton: false,
+    timer: 1500,
+  });
+};
 
   // Update renderHabits
   window.renderHabits = function () {
-    if (!elements.list) return;
-    elements.list.innerHTML =
-      habits.length === 0
-        ? `<p class="text-center text-muted p-4">No habits yet. Tap + to start!</p>`
-        : habits
-            .map(
-              (h, i) => `
-        <div class="habit-row d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
-          <div style="max-width: 60%">
-            <div class="fw-bold ${h.done ? "text-decoration-line-through text-muted" : ""}">
-              ${h.icon || "✨"} ${h.title}
-            </div>
-            <div class="text-muted small">${h.repeat} • ${h.time}</div>
-          </div>
-          <div class="d-flex gap-2">
-            <button class="complete-btn ${h.done ? "btn-success" : "btn-outline-success"}" onclick="toggleDone(${i})">
-              ${h.done ? "✓" : "Done"}
-            </button>
-            <button class="btn btn-sm btn-outline-secondary" onclick="editHabit(${i})">✎</button>
-            <button class="btn btn-sm btn-outline-danger" onclick="deleteHabit(${i})">✕</button>
-          </div>
-        </div>`,
-            )
-            .join("");
-    updateProgress();
-  };
+  if (!elements.list) return;
 
+  const cardColors = ["#f7c6b6", "#bfeaf2", "#d8f3c0", "#fbe7a1", "#d9c2f0"];
+
+  if (habits.length === 0) {
+    elements.list.innerHTML = `<p class="text-center text-muted p-4">No habits yet. Tap + to start!</p>`;
+    updateProgress();
+    return;
+  }
+
+  elements.list.innerHTML = `
+  ${deleteMode ? `
+    <div class="d-flex justify-content-end gap-2 mb-3">
+      <button class="btn btn-danger btn-sm rounded-pill px-3" onclick="confirmDeleteSelected()">Delete Selected</button>
+      <button class="btn btn-secondary btn-sm rounded-pill px-3" onclick="cancelDeleteMode()">Cancel</button>
+    </div>
+  ` : ""}
+  <div class="row g-3">
+      ${habits
+        .map((h, i) => {
+          const bgColor = cardColors[i % cardColors.length];
+
+          return `
+            <div class="col-md-6">
+  <div 
+  class="habit-card ${deleteMode ? "delete-mode-card" : ""}" 
+  style="background-color: ${bgColor}; color: #333; cursor: ${deleteMode ? "pointer" : "default"}; border: ${deleteMode ? "2px dashed #d33" : "none"};"
+>
+                <div class="habit-text-section">
+                  <div class="habit-title ${h.done ? "crossed-out" : ""}" style="color:#333;">
+                    ${h.icon || "✨"} ${h.title}
+                  </div>
+                  <div class="habit-meta" style="color:#333;">
+                    <i class="bi bi-calendar3"></i> Repeat: ${h.repeat}
+                  </div>
+                  <div class="habit-meta" style="color:#333;">
+                    ${h.time}
+                  </div>
+                </div>
+
+                ${
+  deleteMode
+    ? `
+      <button
+        class="btn rounded-circle d-flex align-items-center justify-content-center"
+        style="
+          width: 32px;
+          height: 32px;
+          border: 2px solid #333;
+          background: ${selectedToDelete.includes(i) ? "#d33" : "#fff"};
+          color: ${selectedToDelete.includes(i) ? "#fff" : "#333"};
+          flex-shrink: 0;
+        "
+        onclick="event.stopPropagation(); toggleHabitSelection(${i})"
+      >
+        ${selectedToDelete.includes(i) ? "✓" : ""}
+      </button>
+    `
+    : `
+      <div class="dropdown">
+        <button class="btn btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="color:#333;">
+          <i class="bi bi-three-dots-vertical"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li>
+            <button class="dropdown-item" onclick="toggleDone(${i})">
+              ${h.done ? "Mark as Undone" : "Mark as Done"}
+            </button>
+          </li>
+          <li>
+            <button class="dropdown-item" onclick="editHabit(${i})">
+              Edit
+            </button>
+          </li>
+          <li>
+            <button class="dropdown-item text-danger" onclick="deleteHabit(${i})">
+              Delete
+            </button>
+          </li>
+        </ul>
+      </div>
+    `
+}
+              </div>
+            </div>
+          `;
+        })
+        .join("")}
+    </div>
+  `;
+
+  updateProgress();
+};
+
+if (deleteMode) return;
   window.toggleDone = (i) => {
     const todayStr = new Date().toISOString().split("T")[0];
     habits[i].done = !habits[i].done;
@@ -166,23 +283,126 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   window.deleteHabit = (i) => {
+  if (!habits || habits.length === 0) {
     Swal.fire({
-      title: "Delete habit?",
-      text: "Are you sure? This action cannot be undone.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#333",
-      confirmButtonText: "Yes, delete it.",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        habits.splice(i, 1);
-        localStorage.setItem("habits", JSON.stringify(habits));
-        renderHabits();
-      }
+      icon: "info",
+      title: "No habits yet",
+      text: "There is no habit to delete.",
+      confirmButtonColor: "#ffb347"
     });
-  };
+    return;
+  }
 
+  if (typeof i !== "number") {
+    Swal.fire({
+      icon: "warning",
+      title: "No habit selected",
+      text: "Please choose a habit to delete from your habits list.",
+      confirmButtonColor: "#ffb347"
+    });
+    return;
+  }
+
+  Swal.fire({
+    title: "Delete habit?",
+    text: "Are you sure? This action cannot be undone.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#333",
+    confirmButtonText: "Yes, delete it."
+  }).then((result) => {
+    if (result.isConfirmed) {
+      habits.splice(i, 1);
+      localStorage.setItem("habits", JSON.stringify(habits));
+      renderHabits();
+    }
+  });
+};
+
+  window.toggleDeleteMode = () => {
+  if (!habits || habits.length === 0) {
+    Swal.fire({
+      icon: "info",
+      title: "No habits yet",
+      text: "There is no habit to delete.",
+      confirmButtonColor: "#ffb347"
+    });
+    return;
+  }
+
+  deleteMode = !deleteMode;
+  selectedToDelete = [];
+
+  const fabMenu = document.getElementById("fabMenu");
+  if (fabMenu) fabMenu.classList.remove("open");
+
+  renderHabits();
+};
+
+window.toggleHabitSelection = (i) => {
+  if (!deleteMode) return;
+
+  const index = selectedToDelete.indexOf(i);
+
+  if (index > -1) {
+    selectedToDelete.splice(index, 1);
+  } else {
+    selectedToDelete.push(i);
+  }
+
+  renderHabits();
+};
+
+window.confirmDeleteSelected = () => {
+  if (!deleteMode) return;
+
+  if (selectedToDelete.length === 0) {
+    Swal.fire({
+      icon: "warning",
+      title: "No habits selected",
+      text: "Please select at least one habit to delete.",
+      confirmButtonColor: "#ffb347"
+    });
+    return;
+  }
+
+  Swal.fire({
+    title: "Delete selected habits?",
+    text: `You selected ${selectedToDelete.length} habit(s). This action cannot be undone.`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#333",
+    confirmButtonText: "Yes, delete them"
+  }).then((result) => {
+    if (result.isConfirmed) {
+      habits = habits.filter((_, index) => !selectedToDelete.includes(index));
+      localStorage.setItem("habits", JSON.stringify(habits));
+
+      deleteMode = false;
+      selectedToDelete = [];
+
+      renderHabits();
+
+      Swal.fire({
+        icon: "success",
+        title: "Deleted!",
+        text: "Selected habits have been removed.",
+        timer: 1500,
+        showConfirmButton: false
+      });
+    }
+  });
+};
+
+window.cancelDeleteMode = () => {
+  deleteMode = false;
+  selectedToDelete = [];
+  renderHabits();
+};
+  
+if (deleteMode) return;
   window.completeAll = () => {
     const todayStr = new Date().toISOString().split("T")[0];
     habits.forEach((h) => {
@@ -453,26 +673,6 @@ window.toggleMenu = function () {
   if (fabMenu) {
     fabMenu.classList.toggle("open");
     console.log("Menu toggled!");
-  }
-};
-
-window.openHabitModal = function () {
-  // Hanapin ulit ang modal dahil nasa labas tayo ng scope
-  const modal = document.getElementById("habitModal");
-  const fabMenu = document.getElementById("fabMenu");
-  const modalTitle = document.querySelector("#habitModal h2");
-
-  if (modal) {
-    modal.style.display = "flex";
-    if (modalTitle) modalTitle.innerText = "Create new Habit";
-
-    // Linisin ang inputs (Optional pero maganda para sa 'New Habit')
-    const inputs = modal.querySelectorAll("input, textarea");
-    inputs.forEach((input) => (input.value = ""));
-  }
-
-  if (fabMenu) {
-    fabMenu.classList.remove("open");
   }
 };
 

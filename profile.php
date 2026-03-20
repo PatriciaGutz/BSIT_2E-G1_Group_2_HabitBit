@@ -37,6 +37,7 @@ document.addEventListener("DOMContentLoaded", function () {
       <span class="fw-bold text-white fs-3">HabitBit </span>
     </a>
     <div class="d-flex text-white small gap-3">
+      <a href="dashboard.php" class="text-white text-decoration-none">Home</a>  
       <a href="contact.php" class="text-white text-decoration-none">Contact</a>
       <a href="about.php" class="text-white text-decoration-none">About</a>
       <a href="gallery.php" class="text-white text-decoration-none me-3">Gallery</a>
@@ -91,7 +92,7 @@ document.addEventListener("DOMContentLoaded", function () {
             <div class="fab-container" id="fabMenu">
             <button class="close-btn" onclick="toggleMenu()">x</button>
             <button class="sub-btn edit" onclick="openHabitModal()">✎</button>
-            <button class="sub-btn delete" onclick="deleteHabit()">🗑</button>
+            <button class="sub-btn delete" onclick="toggleDeleteMode()">🗑</button>
 
             <button id="mainBtn" onclick="toggleMenu(); moveNavIndicator(50)">+</button>
     </div>
@@ -121,19 +122,60 @@ document.addEventListener("DOMContentLoaded", function () {
         </div>
 
         <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-white-50 mb-2">
-            <span>Repeat</span>
-            <input id="habitRepeat" type="text" class="bg-transparent border-0 text-white text-end" placeholder="Mon, Wed, Fri">
-        </div>
+  <span>Repeat</span>
+  <select id="habitRepeat" class="bg-transparent border-0 text-dark" style="outline:none;">
+    <option value="Daily">Daily</option>
+    <option value="Weekdays">Weekdays</option>
+    <option value="Weekends">Weekends</option>
+    <option value="Every Monday">Every Monday</option>
+    <option value="Every Tuesday">Every Tuesday</option>
+    <option value="Every Wednesday">Every Wednesday</option>
+    <option value="Every Thursday">Every Thursday</option>
+    <option value="Every Friday">Every Friday</option>
+    <option value="Every Saturday">Every Saturday</option>
+    <option value="Every Sunday">Every Sunday</option>
+  </select>
+</div>
 
-        <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-white-50 mb-4">
-            <span>Set Time</span>
-            <input id="habitTime" type="time" class="bg-transparent border-0 text-white text-end" value="07:00">
-        </div>
+<div class="d-flex justify-content-between align-items-center py-2 border-bottom border-white-50 mb-4">
+  <span>Set Time</span>
+  <div class="d-flex gap-2 align-items-center">
+    <input
+      id="habitHour"
+      type="number"
+      min="1"
+      max="12"
+      placeholder="7"
+      class="border-0 text-dark text-center"
+      style="width: 55px; outline:none; background-color: rgba(255,255,255,0.9); border-radius:6px; padding:2px 6px;"
+    >
+
+    <span class="text-white">:</span>
+
+    <input
+      id="habitMinute"
+      type="number"
+      min="0"
+      max="59"
+      placeholder="00"
+      class="border-0 text-dark text-center"
+      style="width: 55px; outline:none; background-color: rgba(255,255,255,0.9); border-radius:6px; padding:2px 6px;"
+    >
+
+    <select
+      id="habitPeriod"
+      class="border-0 text-dark"
+      style="outline:none; background-color: rgba(255,255,255,0.9); border-radius:6px; padding:2px 6px;"
+    >
+      <option value="AM">AM</option>
+      <option value="PM">PM</option>
+    </select>
+  </div>
+</div>
 
         <button class="btn btn-warning w-100 rounded-pill fw-bold py-2 shadow-sm" onclick="saveHabit()">Confirm</button>
     </div>
 </div>
-
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

@@ -75,7 +75,7 @@ if ($today_month == 12 && $today_date == 25) {
             <span class="fw-bold text-white fs-3">HabitBit</span>
             </a>
             <div class="d-flex text-white small">
-            <a href="dashboard.php" class="text-white text-decoration-none me-3 nav-active">Home</a>
+               <a href="dashboard.php" class="text-white text-decoration-none me-3 nav-active">Home</a>
                <a href="contact.php" class="text-white text-decoration-none me-3">Contact</a>
                <a href="about.php" class="text-white text-decoration-none me-3">About</a>
                <a href="gallery.php" class="text-white text-decoration-none me-3">Gallery</a>
@@ -87,13 +87,13 @@ if ($today_month == 12 && $today_date == 25) {
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold mb-0"><?php echo $greeting; ?>,</h2>
-            <h2 class="fw-bold"><?php echo $user_name; ?>!</h2>
+            <h2 class="fw-bold mb-0" id="greetingText"><?php echo $greeting; ?>,</h2>
+            <h2 class="fw-bold" id="userNameText"><?php echo $user_name; ?>!</h2>
         </div>
 
         <div class="d-flex align-items-center bg-white p-2 rounded-pill shadow-sm border">
             <span id="login-streak" class="me-2">🔥 0</span>
-            <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($user_name); ?>&background=77D0A0&color=fff" class="rounded-circle" width="32" alt="Profile">
+            <img id="dashboardAvatar" src="https://ui-avatars.com/api/?name=<?php echo urlencode($user_name); ?>&background=77D0A0&color=fff" class="rounded-circle" width="32" alt="Profile">
         </div>
     </div>
 
@@ -164,7 +164,7 @@ if ($today_month == 12 && $today_date == 25) {
                   <div class="fab-container" id="fabMenu">
                      <button class="close-btn" onclick="toggleMenu()">x</button>
                      <button class="sub-btn edit" onclick="openHabitModal()">✎</button>
-                     <button class="sub-btn delete" onclick="deleteHabit()">🗑</button>
+                     <button class="sub-btn delete" onclick="toggleDeleteMode()">🗑</button>
                      <button id="mainBtn" onclick="toggleMenu()">+</button>
                   </div>
                <a href="profile.php" class="nav-link" onclick="moveNavIndicator(70)">👤</a>
@@ -189,13 +189,56 @@ if ($today_month == 12 && $today_date == 25) {
                <textarea id="habitDesc" class="form-control border-0 rounded" placeholder="Description (optional)" rows="2"></textarea>
             </div>
             <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-white-50 mb-2">
-               <span>Repeat</span>
-               <input id="habitRepeat" type="text" class="bg-transparent border-0 text-white text-end" value="Mon, Wed, Fri">
-            </div>
-            <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-white-50 mb-4">
-               <span>Set Time</span>
-               <input id="habitTime" type="time" class="bg-transparent border-0 text-white text-end" value="07:00">
-            </div>
+  <span>Repeat</span>
+  <select id="habitRepeat" class="border-0 text-dark" style="outline:none; background-color: rgba(255,255,255,0.9); border-radius:6px; padding:2px 6px;">
+    <option value="Daily">Daily</option>
+    <option value="Weekdays">Weekdays</option>
+    <option value="Weekends">Weekends</option>
+    <option value="Every Monday">Every Monday</option>
+    <option value="Every Tuesday">Every Tuesday</option>
+    <option value="Every Wednesday">Every Wednesday</option>
+    <option value="Every Thursday">Every Thursday</option>
+    <option value="Every Friday">Every Friday</option>
+    <option value="Every Saturday">Every Saturday</option>
+    <option value="Every Sunday">Every Sunday</option>
+  </select>
+</div>
+
+<div class="d-flex justify-content-between align-items-center py-2 border-bottom border-white-50 mb-4">
+  <span>Set Time</span>
+  <div class="d-flex gap-2 align-items-center">
+    <input
+      id="habitHour"
+      type="number"
+      min="1"
+      max="12"
+      placeholder="7"
+      class="border-0 text-dark text-center"
+      style="width: 55px; outline:none; background-color: rgba(255,255,255,0.9); border-radius:6px; padding:2px 6px;"
+    >
+
+    <span class="text-white">:</span>
+
+    <input
+      id="habitMinute"
+      type="number"
+      min="0"
+      max="59"
+      placeholder="00"
+      class="border-0 text-dark text-center"
+      style="width: 55px; outline:none; background-color: rgba(255,255,255,0.9); border-radius:6px; padding:2px 6px;"
+    >
+
+    <select
+      id="habitPeriod"
+      class="border-0 text-dark"
+      style="outline:none; background-color: rgba(255,255,255,0.9); border-radius:6px; padding:2px 6px;"
+    >
+      <option value="AM">AM</option>
+      <option value="PM">PM</option>
+    </select>
+  </div>
+</div>
             <button class="btn btn-warning w-100 rounded-pill fw-bold py-2 shadow-sm" onclick="saveHabit()">Confirm</button>
          </div>
       </div>
@@ -203,5 +246,25 @@ if ($today_month == 12 && $today_date == 25) {
       <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
       <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
       <script src="js/main.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const storedUser = JSON.parse(localStorage.getItem("registeredUser"));
+
+  if (storedUser && storedUser.firstName) {
+    const firstName = storedUser.firstName.trim();
+
+    const userNameText = document.getElementById("userNameText");
+    const dashboardAvatar = document.getElementById("dashboardAvatar");
+
+    if (userNameText) {
+      userNameText.textContent = firstName + "!";
+    }
+
+    if (dashboardAvatar) {
+      dashboardAvatar.src = "https://ui-avatars.com/api/?name=" + encodeURIComponent(firstName) + "&background=77D0A0&color=fff";
+    }
+  }
+});
+</script>
    </body>
 </html>
