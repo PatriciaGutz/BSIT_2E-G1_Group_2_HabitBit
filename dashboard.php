@@ -1,3 +1,64 @@
+<?php
+session_start();
+include('db_connect.php'); 
+
+date_default_timezone_set('Asia/Manila');
+
+// 1. Kunin ang pangalan ng user
+$user_name = isset($_SESSION['firstname']) ? $_SESSION['firstname'] : "User";
+
+// --- DAGDAG: GREETING LOGIC PARA SA ORAS ---
+$hour = (int)date("H");
+$greeting = "Good evening"; // Default
+
+if ($hour >= 5 && $hour < 12) {
+    $greeting = "Good morning";
+} elseif ($hour >= 12 && $hour < 18) {
+    $greeting = "Good afternoon";
+} else {
+    $greeting = "Good evening";
+}
+// ------------------------------------------
+
+$today_month = date("n"); // 1-12
+$today_date = date("j");  // 1-31
+
+// 2. Kunin ang bday mula sa session
+$user_bday = isset($_SESSION['birthdate']) ? $_SESSION['birthdate'] : ""; 
+
+$is_birthday = false;
+if (!empty($user_bday)) {
+    $bday_parts = explode('-', $user_bday);
+    if (count($bday_parts) == 3) {
+        if ((int)$bday_parts[1] == $today_month && (int)$bday_parts[2] == $today_date) {
+            $is_birthday = true;
+        }
+    }
+}
+
+// 3. SPECIAL GREETING LOGIC 
+if ($today_month == 12 && $today_date == 25) {
+    $display_quote = "🎄 Merry Christmas! Celebrate with joy and better habits!";
+} elseif ($today_month == 1 && $today_date == 1) {
+    $display_quote = "🎆 Happy New Year! New Year, New Bits. Build your future today!";
+} elseif ($is_birthday) {
+    $display_quote = "🎂 Happy Birthday, " . $user_name . "! Another year to build great habits!";
+} else {
+    // 4. DATABASE QUOTE LOGIC (Pinned or Random)
+    $check_selected = mysqli_query($conn, "SELECT quote_text FROM quotes WHERE is_selected = 1 LIMIT 1");
+
+    if ($check_selected && mysqli_num_rows($check_selected) > 0) {
+        $row = mysqli_fetch_assoc($check_selected);
+        $display_quote = $row['quote_text'];
+    } else {
+        $query = "SELECT quote_text FROM quotes ORDER BY RAND() LIMIT 1";
+        $result = mysqli_query($conn, $query);
+        $row = mysqli_fetch_assoc($result);
+        $display_quote = $row ? $row['quote_text'] : "Believe you can and you're halfway there.";
+    }
+}
+?>
+?>
 <!DOCTYPE html>
 <html lang="en">
    <head>
@@ -25,28 +86,32 @@
             </div>
          </div>
       </nav>
-      <div class="container mt-4">
-         <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-               <h2 class="fw-bold mb-0">Good morning,</h2>
-               <h2 class="fw-bold">Abcde!</h2>
-            </div>
-            <div class="d-flex align-items-center bg-white p-2 rounded-pill shadow-sm border">
-               <span id="login-streak" class="me-2">🔥 0</span>
-               <img src="https://ui-avatars.com/api/?name=Abcde&background=77D0A0&color=fff" class="rounded-circle" width="32" alt="Profile">
-            </div>
-         </div>
-         <div class="quote-container text-white p-4 rounded-5 text-center mb-4 shadow-sm">
-            <div class="quote-icon-box top-left">
-               <i class="bi bi-quote"></i>
-            </div>
-            <p id="daily-quote" class="mb-0 fs-4 fw-bold py-4">Loading your daily bit of wisdom...</p>
-            <div class="quote-icon-box bottom-right">
-               <i class="bi bi-quote"></i>
-            </div>
-         </div>
-         <div class="tracker-section pb-5">
-    <div class="bg-white p-3 rounded-4 shadow-sm border">
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0"><?php echo $greeting; ?>,</h2>
+            <h2 class="fw-bold"><?php echo $user_name; ?>!</h2>
+        </div>
+
+        <div class="d-flex align-items-center bg-white p-2 rounded-pill shadow-sm border">
+            <span id="login-streak" class="me-2">🔥 0</span>
+            <img src="https://ui-avatars.com/api/?name=<?php echo urlencode($user_name); ?>&background=77D0A0&color=fff" class="rounded-circle" width="32" alt="Profile">
+        </div>
+    </div>
+
+<div class="quote-container text-white p-4 rounded-5 text-center mb-4 shadow-sm position-relative">
+        <a href="manage_quotes.php" class="position-absolute top-0 end-0 m-3 text-white opacity-50 text-decoration-none">
+            <i class="bi bi-pencil-square"></i>
+        </a>
+        <div class="quote-icon-box top-left"><i class="bi bi-quote"></i></div>
+        
+        <p id="daily-quote" class="mb-0 fs-4 fw-bold py-4">
+            <?php echo '"' . $display_quote . '"'; ?>
+        </p>
+        
+        <div class="quote-icon-box bottom-right"><i class="bi bi-quote"></i></div>
+    </div>
         
         <div class="weekly-tracker bg-white p-3 rounded-4 shadow-sm mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
