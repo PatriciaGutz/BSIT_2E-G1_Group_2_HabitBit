@@ -90,10 +90,8 @@ document.addEventListener("DOMContentLoaded", function () {
         <div class="nav-indicator"></div>
         <a href="dashboard.php" class="nav-link" onclick="moveNavIndicator(25)">🏠</a>
             <div class="fab-container" id="fabMenu">
-            <button class="close-btn" onclick="toggleMenu()">x</button>
             <button class="sub-btn edit" onclick="openHabitModal()">✎</button>
             <button class="sub-btn delete" onclick="toggleDeleteMode()">🗑</button>
-
             <button id="mainBtn" onclick="toggleMenu(); moveNavIndicator(50)">+</button>
     </div>
         <a href="profile.php" class="nav-link active" onclick="moveNavIndicator(70)">👤</a>
@@ -180,6 +178,13 @@ document.addEventListener("DOMContentLoaded", function () {
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/main.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const navBar = document.querySelector('.app-nav');
+    if(navBar) navBar.style.setProperty('--active-offset', '72%');
+});
+</script>
 
 </body>
 </html>

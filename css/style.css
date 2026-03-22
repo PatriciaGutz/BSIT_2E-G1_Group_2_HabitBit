@@ -619,10 +619,10 @@ body {
   height: 5px;
   background: linear-gradient(90deg, #4ed9d1 0%, #82e88a 100%);
   border-radius: 10px;
-
-  left: var(--active-offset, 50%);
+  
+  left: var(--active-offset, 25%); 
+  
   transform: translateX(-50%);
-
   transition: left 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   z-index: 1;
   pointer-events: none;
@@ -905,3 +905,28 @@ body {
 .hb-blue p {
   color: #f8f9fa;
 }
+
+.modal-content.edit-habit input,
+.modal-content.edit-habit select,
+.modal-content.edit-habit textarea {
+  background-color: #ffffff !important;
+  color: #333333 !important;
+  border: none !important;
+  border-radius: 10px;
+  box-shadow: none !important;
+}
+
+.modal-content.edit-habit input::placeholder,
+.modal-content.edit-habit textarea::placeholder {
+  color: #666666 !important;
+}
+
+.modal-content.edit-habit input:focus,
+.modal-content.edit-habit select:focus,
+.modal-content.edit-habit textarea:focus {
+  background-color: #ffffff !important;
+  color: #333333 !important;
+  outline: none;
+  box-shadow: none !important;
+}
+

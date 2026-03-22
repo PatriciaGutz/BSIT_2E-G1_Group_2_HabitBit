@@ -162,7 +162,6 @@ if ($today_month == 12 && $today_date == 25) {
             <div class="nav-indicator"></div>
                <a href="dashboard.php" class="nav-link active" onclick="moveNavIndicator(25)">🏠</a>
                   <div class="fab-container" id="fabMenu">
-                     <button class="close-btn" onclick="toggleMenu()">x</button>
                      <button class="sub-btn edit" onclick="openHabitModal()">✎</button>
                      <button class="sub-btn delete" onclick="toggleDeleteMode()">🗑</button>
                      <button id="mainBtn" onclick="toggleMenu()">+</button>
@@ -249,6 +248,8 @@ if ($today_month == 12 && $today_date == 25) {
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   const storedUser = JSON.parse(localStorage.getItem("registeredUser"));
+  const navBar = document.querySelector('.app-nav');
+  if(navBar) navBar.style.setProperty('--active-offset', '27.3%');
 
   if (storedUser && storedUser.firstName) {
     const firstName = storedUser.firstName.trim();
@@ -265,6 +266,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 });
+
 </script>
    </body>
 </html>
