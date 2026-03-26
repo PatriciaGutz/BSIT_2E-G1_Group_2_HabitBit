@@ -6,7 +6,7 @@ $user_id = isset($_SESSION['user_id']) ? intval($_SESSION['user_id']) : 0;
 date_default_timezone_set('Asia/Manila');
 
 
-$user_name = (isset($_SESSION['firstname']) && !empty($_SESSION['firstname'])) ? $_SESSION['firstname'] : "Michael";
+$user_name = $_SESSION['firstname'] ?? "Habit Builder";
 
 $hour = (int)date("H");
 $greeting = "Good evening"; 
@@ -105,7 +105,6 @@ if ($today_month == 12 && $today_date == 25) {
                <a href="contact.php" class="text-white text-decoration-none me-3">Contact</a>
                <a href="about.php" class="text-white text-decoration-none me-3">About</a>
                <a href="gallery.php" class="text-white text-decoration-none me-3">Gallery</a>
-               <a href="#" class="text-white text-decoration-none">🔔</a>
             </div>
          </div>
       </nav>

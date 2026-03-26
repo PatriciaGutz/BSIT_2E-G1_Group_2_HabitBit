@@ -46,7 +46,6 @@
           href="gallery.php"
           class="text-white text-decoration-none me-3"
           >Gallery</a>
-         <a href="#" class="text-white text-decoration-none">🔔</a>
         </div>
       </div>
     </nav>

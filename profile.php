@@ -3,31 +3,40 @@
 <?php session_start(); ?>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const phpFirstName = "<?php echo isset($_SESSION['firstname']) ? $_SESSION['firstname'] : ''; ?>";
+    const phpFirstName = "<?php echo isset($_SESSION['firstname']) ? addslashes($_SESSION['firstname']) : ''; ?>";
+    const phpEmail = "<?php echo isset($_SESSION['email']) ? addslashes($_SESSION['email']) : ''; ?>";
     const phpUserId = "<?php echo isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 0; ?>";
-    
+
     if (phpUserId <= 0) {
         window.location.href = 'login.php';
         return;
     }
-    
-    // Fetch current user profile
+
+    const profileName = document.getElementById("profileName");
+    const profileEmail = document.getElementById("profileEmail");
+    const profileAvatar = document.getElementById("profileAvatar");
+
+    const fallbackName = phpFirstName || 'User';
+    const fallbackEmail = phpEmail || 'No email available';
+
+    profileName.innerText = fallbackName;
+    profileEmail.innerText = "🖂 " + fallbackEmail;
+    profileAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(fallbackName)}&background=77D0A0&color=fff`;
+
     fetch('api/profile.php')
         .then(res => res.json())
         .then(user => {
             if (user.success) {
-                const fullName = user.first_name + ' ' + user.last_name;
-                document.getElementById("profileName").innerText = fullName;
-                document.getElementById("profileEmail").innerText = "🖂 " + user.email;
-                document.getElementById("profileAvatar").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=77D0A0&color=fff`;
-            } else {
-                document.getElementById("profileName").innerText = phpFirstName || 'User';
-                document.getElementById("profileEmail").innerText = "🖂 Loading...";
+                const fullName = (user.first_name || '') + ' ' + (user.last_name || '');
+                const cleanName = fullName.trim() || fallbackName;
+                const cleanEmail = user.email || fallbackEmail;
+
+                profileName.innerText = cleanName;
+                profileEmail.innerText = "🖂 " + cleanEmail;
+                profileAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName)}&background=77D0A0&color=fff`;
             }
         })
         .catch(() => {
-            document.getElementById("profileName").innerText = phpFirstName || 'User';
-            document.getElementById("profileEmail").innerText = "🖂 Session user";
         });
 });
 </script>
@@ -53,7 +62,7 @@ document.addEventListener("DOMContentLoaded", function () {
       <a href="contact.php" class="text-white text-decoration-none">Contact</a>
       <a href="about.php" class="text-white text-decoration-none">About</a>
       <a href="gallery.php" class="text-white text-decoration-none me-3">Gallery</a>
-      <a href="#" class="text-white text-decoration-none">🔔</a>
+      
       
     </div>
   </div>

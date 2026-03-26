@@ -21,7 +21,6 @@
                 <a href="contact.php" class="text-white text-decoration-none me-3">Contact</a>
                 <a href="about.php" class="text-white text-decoration-none me-3">About</a>
                  <a href="gallery.php" class="text-white text-decoration-none me-3 nav-active">Gallery</a>
-                <a href="#" class="text-white text-decoration-none">🔔</a>
             </div>
         </div>
     </nav>
