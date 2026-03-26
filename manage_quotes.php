@@ -1,19 +1,20 @@
 <?php
 session_start();
+$user_id = $_SESSION['user_id'];
 include('db_connect.php'); 
 
 // LOCK A QUOTE (Pin to Home)
 if (isset($_GET['select_quote'])) {
     $id = intval($_GET['select_quote']);
-    mysqli_query($conn, "UPDATE quotes SET is_selected = 0"); // I-reset muna lahat para isa lang ang pinned
-    mysqli_query($conn, "UPDATE quotes SET is_selected = 1 WHERE id=$id");
+    mysqli_query($conn, "UPDATE user_quotes SET is_selected = 0 WHERE user_id = '$user_id'");
+    mysqli_query($conn, "UPDATE user_quotes SET is_selected = 1 WHERE id=$id AND user_id='$user_id'");
     header('location: manage_quotes.php?status=locked');
     exit();
 }
 
 // UNLOCK / BACK TO RANDOM
 if (isset($_GET['reset_random'])) {
-    mysqli_query($conn, "UPDATE quotes SET is_selected = 0");
+    mysqli_query($conn, "UPDATE user_quotes SET is_selected = 0 WHERE user_id = '$user_id'");
     header('location: manage_quotes.php?status=random_enabled');
     exit();
 }
@@ -21,20 +22,26 @@ if (isset($_GET['reset_random'])) {
 // ADD QUOTE 
 if (isset($_POST['save_quote'])) {
     $quote_text = mysqli_real_escape_string($conn, $_POST['quote_text']);
-    $insert_query = "INSERT INTO quotes (quote_text) VALUES ('$quote_text')";
-    
+    $insert_query = "
+        INSERT INTO user_quotes (user_id, quote_text, is_selected)
+        VALUES ('$user_id', '$quote_text', 0)
+    ";
     if (mysqli_query($conn, $insert_query)) {
         header('location: manage_quotes.php?status=added');
         exit();
     }
 }
-
 // DELETE QUOTE
-if (isset($_GET['delete'])) {
-    $id = intval($_GET['delete']); 
-    mysqli_query($conn, "DELETE FROM quotes WHERE id=$id");
-    header('location: manage_quotes.php?status=deleted');
-    exit();
+if (isset($_POST['save_quote'])) {
+    $quote_text = mysqli_real_escape_string($conn, $_POST['quote_text']);
+    $insert_query = "
+        INSERT INTO user_quotes (user_id, quote_text, is_selected)
+        VALUES ('$user_id', '$quote_text', 0)
+    ";
+    if (mysqli_query($conn, $insert_query)) {
+        header('location: manage_quotes.php?status=added');
+        exit();
+    }
 }
 ?>
 
@@ -78,6 +85,11 @@ if (isset($_GET['delete'])) {
                     Back to Random Mode.
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
+            <?php elseif($_GET['status'] == 'updated'): ?>
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        Quote updated successfully!
+                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>    
             <?php endif; ?>
         <?php endif; ?>
 
@@ -103,7 +115,11 @@ if (isset($_GET['delete'])) {
                 </thead>
                 <tbody>
                     <?php
-                    $result = mysqli_query($conn, "SELECT * FROM quotes ORDER BY id DESC");
+                    $result = mysqli_query($conn, "
+    SELECT * FROM user_quotes
+    WHERE user_id = '$user_id'
+    ORDER BY id DESC
+");
                     if (mysqli_num_rows($result) > 0) {
                         while ($row = mysqli_fetch_assoc($result)) { ?>
                             <tr>
@@ -147,6 +163,24 @@ if (isset($_GET['delete'])) {
             </table>
         </div>
     </div>
+    
+  <div class="card border-0 shadow-sm p-4 mt-4 rounded-4">
+    <h5 class="fw-bold mb-3 text-secondary">Built-in Quotes</h5>
+
+    <div class="row g-3">
+        <?php
+        $default = mysqli_query($conn, "SELECT * FROM quotes ORDER BY id ASC");
+        while ($row = mysqli_fetch_assoc($default)) { ?>
+            <div class="col-md-6">
+                <div class="p-3 bg-light rounded-4 border h-100">
+                    <span class="text-muted fst-italic">"</span>
+                    <span><?php echo htmlspecialchars($row['quote_text']); ?></span>
+                    <span class="text-muted fst-italic">"</span>
+                </div>
+            </div>
+        <?php } ?>
+    </div>
+</div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
