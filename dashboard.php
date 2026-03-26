@@ -247,23 +247,21 @@ if ($today_month == 12 && $today_date == 25) {
       <script src="js/main.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-  const storedUser = JSON.parse(localStorage.getItem("registeredUser"));
   const navBar = document.querySelector('.app-nav');
   if(navBar) navBar.style.setProperty('--active-offset', '27.3%');
 
-  if (storedUser && storedUser.firstName) {
-    const firstName = storedUser.firstName.trim();
+  // Use PHP session data (prioritized over localStorage)
+  const phpFirstName = "<?php echo isset($_SESSION['firstname']) ? $_SESSION['firstname'] : ''; ?>";
+  const phpUserId = "<?php echo isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 0; ?>";
+  
+  console.log('PHP Session:', {firstname: phpFirstName, user_id: phpUserId});
+  
+  const userNameText = document.getElementById("userNameText");
+  const dashboardAvatar = document.getElementById("dashboardAvatar");
 
-    const userNameText = document.getElementById("userNameText");
-    const dashboardAvatar = document.getElementById("dashboardAvatar");
-
-    if (userNameText) {
-      userNameText.textContent = firstName + "!";
-    }
-
-    if (dashboardAvatar) {
-      dashboardAvatar.src = "https://ui-avatars.com/api/?name=" + encodeURIComponent(firstName) + "&background=77D0A0&color=fff";
-    }
+  if (phpFirstName) {
+    if (userNameText) userNameText.textContent = phpFirstName + "!";
+    if (dashboardAvatar) dashboardAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(phpFirstName)}&background=77D0A0&color=fff`;
   }
 });
 

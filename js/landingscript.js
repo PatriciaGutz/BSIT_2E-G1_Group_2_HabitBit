@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     password: passIn.value
                 };
 
-                const response = await fetch('/BSIT_2E-G1_Group_2_HabitBit/api/login.php', {
+                const response = await fetch('api/login.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         password: passIn.value
                     };
 
-                    const response = await fetch('/BSIT_2E-G1_Group_2_HabitBit/api/register.php', {
+                    const response = await fetch('api/register.php', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
