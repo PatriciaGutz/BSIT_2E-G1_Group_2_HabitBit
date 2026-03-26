@@ -2,10 +2,17 @@
 session_start();
 include('db_connect.php');
 
-// Kukunin ang existing na data ng quote base sa ID
+$user_id = isset($_SESSION['user_id']) ? intval($_SESSION['user_id']) : 0;
+
+if ($user_id <= 0) {
+    header('location: login.php');
+    exit();
+}
+
+// Kukunin ang existing na data ng quote base sa ID + current user
 if (isset($_GET['id'])) {
     $id = intval($_GET['id']);
-    $result = mysqli_query($conn, "SELECT * FROM quotes WHERE id=$id");
+    $result = mysqli_query($conn, "SELECT * FROM user_quotes WHERE id = $id AND user_id = $user_id");
     $row = mysqli_fetch_assoc($result);
 
     if (!$row) {
@@ -19,7 +26,11 @@ if (isset($_POST['update_quote'])) {
     $id = intval($_POST['id']);
     $quote_text = mysqli_real_escape_string($conn, $_POST['quote_text']);
 
-    $update_query = "UPDATE quotes SET quote_text='$quote_text' WHERE id=$id";
+    $update_query = "
+        UPDATE user_quotes
+        SET quote_text = '$quote_text'
+        WHERE id = $id AND user_id = $user_id
+    ";
     
     if (mysqli_query($conn, $update_query)) {
         header('location: manage_quotes.php?status=updated');

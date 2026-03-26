@@ -63,6 +63,19 @@ CREATE TABLE `quotes` (
   `is_selected` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+
+-- --------------------------------------------------------
+--
+-- Table structure for table `user_quotes`
+--
+
+CREATE TABLE `user_quotes` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `quote_text` text NOT NULL,
+  `is_selected` int(11) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 --
 -- Dumping data for table `quotes`
 --
@@ -104,6 +117,11 @@ ALTER TABLE `habits`
 ALTER TABLE `quotes`
   ADD PRIMARY KEY (`id`);
 
+  -- Indexes for table `user_quotes`
+ALTER TABLE `user_quotes`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`);
+
 --
 -- AUTO_INCREMENT for dumped tables
 --
@@ -126,6 +144,10 @@ ALTER TABLE `habits`
 ALTER TABLE `quotes`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
+-- AUTO_INCREMENT for table `user_quotes`
+ALTER TABLE `user_quotes`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
 --
 -- Constraints for dumped tables
 --
@@ -135,6 +157,13 @@ ALTER TABLE `quotes`
 --
 ALTER TABLE `habits`
   ADD CONSTRAINT `habits_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- Constraints for table `user_quotes`
+ALTER TABLE `user_quotes`
+  ADD CONSTRAINT `user_quotes_ibfk_1`
+  FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+  ON DELETE CASCADE ON UPDATE CASCADE;
+  
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

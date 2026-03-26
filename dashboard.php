@@ -2,6 +2,7 @@
 session_start();
 include('db_connect.php');
 
+$user_id = isset($_SESSION['user_id']) ? intval($_SESSION['user_id']) : 0;
 date_default_timezone_set('Asia/Manila');
 
 
@@ -34,7 +35,7 @@ if (!empty($user_bday)) {
     }
 }
 
-// SPECIAL GREETING 
+// SPECIAL GREETING
 if ($today_month == 12 && $today_date == 25) {
     $display_quote = "🎄 Merry Christmas! Celebrate with joy and better habits!";
 } elseif ($today_month == 1 && $today_date == 1) {
@@ -42,17 +43,42 @@ if ($today_month == 12 && $today_date == 25) {
 } elseif ($is_birthday) {
     $display_quote = "🎂 Happy Birthday, " . $user_name . "! Another year to build great habits!";
 } else {
-    // 4. DATABASE QUOTE (Pinned or Random)
-    $check_selected = mysqli_query($conn, "SELECT quote_text FROM quotes WHERE is_selected = 1 LIMIT 1");
+    // 1. Check selected personal quote
+    $check_selected = mysqli_query($conn, "
+        SELECT quote_text
+        FROM user_quotes
+        WHERE user_id = '$user_id' AND is_selected = 1
+        LIMIT 1
+    ");
 
     if ($check_selected && mysqli_num_rows($check_selected) > 0) {
         $row = mysqli_fetch_assoc($check_selected);
         $display_quote = $row['quote_text'];
     } else {
-        $query = "SELECT quote_text FROM quotes ORDER BY RAND() LIMIT 1";
-        $result = mysqli_query($conn, $query);
-        $row = mysqli_fetch_assoc($result);
-        $display_quote = $row ? $row['quote_text'] : "Believe you can and you're halfway there.";
+        // 2. If no selected personal quote, get random personal quote
+        $personal_query = mysqli_query($conn, "
+            SELECT quote_text
+            FROM user_quotes
+            WHERE user_id = '$user_id'
+            ORDER BY RAND()
+            LIMIT 1
+        ");
+
+        if ($personal_query && mysqli_num_rows($personal_query) > 0) {
+            $row = mysqli_fetch_assoc($personal_query);
+            $display_quote = $row['quote_text'];
+        } else {
+            // 3. If user has no personal quotes, fallback to default quote
+            $default_query = mysqli_query($conn, "
+                SELECT quote_text
+                FROM quotes
+                ORDER BY RAND()
+                LIMIT 1
+            ");
+
+            $row = mysqli_fetch_assoc($default_query);
+            $display_quote = $row ? $row['quote_text'] : "Believe you can and you're halfway there.";
+        }
     }
 }
 ?>
