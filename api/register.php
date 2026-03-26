@@ -45,7 +45,9 @@ $stmt->bind_param('ssss', $first_name, $last_name, $email, $hashed_password);
 
 if ($stmt->execute()) {
     $user_id = $conn->insert_id;
-    sendJson(['success' => true, 'user_id' => $user_id, 'message' => 'Registered successfully']);
+    $_SESSION['user_id'] = $user_id;
+    $_SESSION['firstname'] = $first_name;
+    sendJson(['success' => true, 'message' => 'Registered and logged in successfully']);
 } else {
     sendJson(['error' => 'Registration failed'], 500);
 }
