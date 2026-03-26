@@ -1,22 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
+<?php session_start(); ?>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const user = JSON.parse(localStorage.getItem('registeredUser'));
-
-    if (!user) {
-        console.log("No user found in localStorage");
+    const phpFirstName = "<?php echo isset($_SESSION['firstname']) ? $_SESSION['firstname'] : ''; ?>";
+    const phpUserId = "<?php echo isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 0; ?>";
+    
+    if (phpUserId <= 0) {
+        window.location.href = 'login.php';
         return;
     }
-
-    const fullName = (user.firstName || "") + " " + (user.lastName || "");
-
-    document.getElementById("profileName").innerText = fullName;
-    document.getElementById("profileEmail").innerText = "🖂 " + user.email;
-
-    document.getElementById("profileAvatar").src =
-        "https://ui-avatars.com/api/?name=" + encodeURIComponent(fullName) +
-        "&background=77D0A0&color=fff";
+    
+    // Fetch current user profile
+    fetch('api/profile.php')
+        .then(res => res.json())
+        .then(user => {
+            if (user.success) {
+                const fullName = user.first_name + ' ' + user.last_name;
+                document.getElementById("profileName").innerText = fullName;
+                document.getElementById("profileEmail").innerText = "🖂 " + user.email;
+                document.getElementById("profileAvatar").src = `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=77D0A0&color=fff`;
+            } else {
+                document.getElementById("profileName").innerText = phpFirstName || 'User';
+                document.getElementById("profileEmail").innerText = "🖂 Loading...";
+            }
+        })
+        .catch(() => {
+            document.getElementById("profileName").innerText = phpFirstName || 'User';
+            document.getElementById("profileEmail").innerText = "🖂 Session user";
+        });
 });
 </script>
 <head>
@@ -58,7 +70,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 <small id="profileEmail" class="text-muted"></small>
             </div>
         </div>
-       <a href="index.php" class="btn btn-sm btn-outline-danger rounded-pill px-3">Log out ➜</a>
+       <a href="api/logout.php" onclick="fetch('api/logout.php').then(()=>location.href='index.php')" class="btn btn-sm btn-outline-danger rounded-pill px-3">Log out ➜</a>
     </div>
 
     <div class="bg-white p-4 rounded-4 shadow-sm border mb-4 mx-md-4">
