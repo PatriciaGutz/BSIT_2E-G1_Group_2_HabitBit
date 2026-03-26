@@ -91,27 +91,10 @@ if ($today_month == 12 && $today_date == 25) {
             <h2 class="fw-bold" id="userNameText"><?php echo $user_name; ?>!</h2>
         </div>
 
-<div class="d-flex align-items-center bg-white p-2 rounded-pill shadow-sm border">
+        <div class="d-flex align-items-center bg-white p-2 rounded-pill shadow-sm border">
             <span id="login-streak" class="me-2">🔥 0</span>
             <img id="dashboardAvatar" src="https://ui-avatars.com/api/?name=<?php echo urlencode($user_name); ?>&background=77D0A0&color=fff" class="rounded-circle" width="32" alt="Profile">
-            <a href="#" onclick="logoutUser()" class="ms-2 text-decoration-none small text-danger fw-bold" title="Logout">↩</a>
         </div>
-
-        <script>
-        function logoutUser() {
-            fetch('api/logout.php')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        window.location.href = 'index.php';
-                    }
-                })
-                .catch(err => {
-                    // Fallback
-                    window.location.href = 'index.php';
-                });
-        }
-        </script>
     </div>
 
 <div class="quote-container text-white p-4 rounded-5 text-center mb-4 shadow-sm position-relative">
