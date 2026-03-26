@@ -11,18 +11,48 @@ SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
 
-
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8mb4 */;
 
+-- Create database if not exists
+CREATE DATABASE IF NOT EXISTS `habitbit_db`;
+USE `habitbit_db`;
+
 --
--- Database: `habitbit_db`
+-- Table structure for table `users`
 --
+
+CREATE TABLE `users` (
+  `id` int(11) NOT NULL,
+  `first_name` varchar(100) NOT NULL,
+  `last_name` varchar(100) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
+--
+-- Table structure for table `habits`
+--
 
+CREATE TABLE `habits` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `icon` varchar(10) DEFAULT NULL,
+  `title` varchar(255) NOT NULL,
+  `repeat_type` varchar(50) NOT NULL,
+  `time_slot` varchar(20) NOT NULL,
+  `description` text DEFAULT NULL,
+  `is_done` tinyint(1) DEFAULT 0,
+  `history` json DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
 --
 -- Table structure for table `quotes`
 --
@@ -54,6 +84,21 @@ INSERT INTO `quotes` (`id`, `quote_text`, `is_selected`) VALUES
 --
 
 --
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `email` (`email`);
+
+--
+-- Indexes for table `habits`
+--
+ALTER TABLE `habits`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `title` (`title`);
+
+--
 -- Indexes for table `quotes`
 --
 ALTER TABLE `quotes`
@@ -64,12 +109,35 @@ ALTER TABLE `quotes`
 --
 
 --
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `habits`
+--
+ALTER TABLE `habits`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `quotes`
 --
 ALTER TABLE `quotes`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `habits`
+--
+ALTER TABLE `habits`
+  ADD CONSTRAINT `habits_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+

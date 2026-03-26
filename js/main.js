@@ -2,20 +2,8 @@ document.addEventListener("DOMContentLoaded", () => {
   /* -------- HABITS LOGIC -------- */
   let deleteMode = false;
   let selectedToDelete = [];
-  let habits = JSON.parse(localStorage.getItem("habits")) || [];
+  let habits = [];
   let editIndex = null;
-
-  function checkAndResetDailyHabits() {
-    const lastReset = localStorage.getItem("lastResetDate");
-    const today = new Date().toISOString().split("T")[0];
-
-    if (lastReset !== today) {
-      let habits = JSON.parse(localStorage.getItem("habits")) || [];
-      habits.forEach((h) => (h.done = false)); // I-reset ang daily check
-      localStorage.setItem("habits", JSON.stringify(habits));
-      localStorage.setItem("lastResetDate", today);
-    }
-  }
 
   const elements = {
     modal: document.getElementById("habitModal"),
@@ -71,17 +59,17 @@ document.addEventListener("DOMContentLoaded", () => {
       box.style.display = box.style.display === "block" ? "none" : "block";
   };
 
-  if (deleteMode) return;
   window.editHabit = (index) => {
     editIndex = index;
     const habit = habits[index];
 
     if (elements.inputs.icon) elements.inputs.icon.value = habit.icon || "";
-    elements.inputs.repeat.value = habit.repeat;
-    elements.inputs.desc.value = habit.desc || "";
+    elements.inputs.repeat.value = habit.repeat_type || habit.repeat || 'Daily';
+    elements.inputs.desc.value = habit.description || habit.desc || "";
 
-    if (habit.time) {
-      const timeParts = habit.time.split(" ");
+    if (habit.time_slot || habit.time) {
+      const timeStr = habit.time_slot || habit.time;
+      const timeParts = timeStr.split(" ");
       if (timeParts.length === 2) {
         const hm = timeParts[0].split(":");
         const period = timeParts[1];
@@ -98,10 +86,37 @@ document.addEventListener("DOMContentLoaded", () => {
     elements.modalTitle.innerText = "Edit Habit";
 
     const descBox = document.getElementById("descBox");
-    if (habit.desc && descBox) descBox.style.display = "block";
+    if ((habit.description || habit.desc) && descBox) descBox.style.display = "block";
   };
+  
+  async function loadHabits() {
+  try {
+    const response = await fetch('api/habits.php');
+    console.log('Load habits status:', response.status);
+    if (!response.ok) {
+      console.error('Load habits failed:', await response.text());
+    }
+    if (response.ok) {
+      habits = await response.json();
+      // Map DB fields to JS expected fields (preserve is_done)
+      habits = habits.map(h => ({
+        ...h,
+        done: !!h.is_done,
+        repeat: h.repeat_type,
+        time: h.time_slot,
+        desc: h.description
+      }));
+    }
+  } catch (error) {
+    console.error('Load habits failed:', error);
+    habits = [];
+  }
+  renderHabits();
+  buildCalendar();
+  renderWeeklyGrid();
+}
 
-  window.saveHabit = () => {
+window.saveHabit = async () => {
   const { icon, title, repeat, hour, minute, period, desc } = elements.inputs;
 
   if (!icon.value.trim()) {
@@ -148,28 +163,48 @@ document.addEventListener("DOMContentLoaded", () => {
   const habitData = {
     icon: icon.value.trim() || "✨",
     title: title.value.trim(),
-    repeat: repeat.value || "Daily",
-    time: formattedTime,
-    desc: desc.value || "",
-    done: editIndex !== null ? habits[editIndex].done : false,
+    repeat_type: repeat.value || "Daily",
+    time_slot: formattedTime,
+    description: desc.value || "",
+    is_done: editIndex !== null ? (habits[editIndex].is_done || 0) : 0,
   };
 
-  if (editIndex === null) {
-    habits.push(habitData);
-  } else {
-    habits[editIndex] = habitData;
+  try {
+    const response = await fetch('api/habits.php', {
+      method: editIndex !== null ? 'PUT' : 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({ ...habitData, id: editIndex !== null ? habits[editIndex].id : '' })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      closeHabitModal();
+      await loadHabits();
+      Swal.fire({
+        icon: "success",
+        title: "Saved!",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "Failed",
+        text: result.error || "Save failed",
+        confirmButtonColor: "#ffb347",
+      });
+    }
+  } catch (error) {
+    Swal.fire({
+      icon: "error",
+      title: "Network error",
+      text: "Check server connection",
+      confirmButtonColor: "#ffb347",
+    });
   }
-
-  localStorage.setItem("habits", JSON.stringify(habits));
-  closeHabitModal();
-  renderHabits();
-
-  Swal.fire({
-    icon: "success",
-    title: "Saved!",
-    showConfirmButton: false,
-    timer: 1500,
-  });
 };
 
   // Update renderHabits
@@ -268,36 +303,61 @@ document.addEventListener("DOMContentLoaded", () => {
   updateProgress();
 };
 
-if (deleteMode) return;
-  window.toggleDone = (i) => {
-    const todayStr = new Date().toISOString().split("T")[0];
-    habits[i].done = !habits[i].done;
-
-    if (!habits[i].history) habits[i].history = {};
-    habits[i].history[todayStr] = habits[i].done; // sync with calendar
-
-    localStorage.setItem("habits", JSON.stringify(habits));
-    renderHabits();
-    buildCalendar();
-    renderWeeklyGrid();
+window.toggleDone = async (i) => {
+    const habit = habits[i];
+    if (!habit.id) return Swal.fire({icon: 'warning', text: 'No ID', confirmButtonColor: '#ffb347'});
+    
+    const currentDoneState = habit.is_done || habit.done || false;
+    const newDone = !currentDoneState;
+    
+    console.log('=== TOGGLE DEBUG ===');
+    console.log('Habit:', habit.id, 'Current:', currentDoneState, '→ New:', newDone);
+    console.log('Total habits:', habits.length, 'is_done count:', habits.filter(h=>h.is_done).length);
+    
+    try {
+      const response = await fetch('api/habits.php', {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: new URLSearchParams({
+          id: habit.id,
+          title: habit.title || 'Untitled',
+          is_done: newDone ? 1 : 0
+        })
+      });
+      
+      console.log('Response status:', response.status);
+      const result = await response.json();
+      console.log('API result:', result);
+      
+      if (result.success) {
+        console.log('Reloading habits...');
+        await loadHabits();
+        console.log('Post-reload habits:', habits.length, 'done:', habits.filter(h=>h.is_done).length);
+        console.log('Expected %:', Math.round((habits.filter(h=>h.is_done).length / habits.length)*100));
+        
+        Swal.fire({
+          icon: newDone ? 'success' : 'info',
+          title: newDone ? '✅ Done!' : '↩️ Undone',
+          timer: 1200,
+          showConfirmButton: false
+        });
+      } else {
+        console.error('API failed:', result);
+        Swal.fire({icon: 'error', text: result.error || 'API Error', confirmButtonColor: '#ffb347'});
+      }
+    } catch (error) {
+      console.error('Fetch error:', error);
+      Swal.fire({icon: 'error', title: 'Network Error', confirmButtonColor: '#ffb347'});
+    }
   };
 
-  window.deleteHabit = (i) => {
-  if (!habits || habits.length === 0) {
-    Swal.fire({
-      icon: "info",
-      title: "No habits yet",
-      text: "There is no habit to delete.",
-      confirmButtonColor: "#ffb347"
-    });
-    return;
-  }
 
-  if (typeof i !== "number") {
+window.deleteHabit = async (i) => {
+  const habit = habits[i];
+  if (!habit || !habit.id) {
     Swal.fire({
       icon: "warning",
       title: "No habit selected",
-      text: "Please choose a habit to delete from your habits list.",
       confirmButtonColor: "#ffb347"
     });
     return;
@@ -311,11 +371,24 @@ if (deleteMode) return;
     confirmButtonColor: "#d33",
     cancelButtonColor: "#333",
     confirmButtonText: "Yes, delete it."
-  }).then((result) => {
+  }).then(async (result) => {
     if (result.isConfirmed) {
-      habits.splice(i, 1);
-      localStorage.setItem("habits", JSON.stringify(habits));
-      renderHabits();
+      try {
+        const response = await fetch('api/habits.php', {
+          method: 'DELETE',
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          body: new URLSearchParams({id: habit.id})
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          await loadHabits();
+        } else {
+          Swal.fire({icon: 'error', text: result.error, confirmButtonColor: '#ffb347'});
+        }
+      } catch (error) {
+        Swal.fire({icon: 'error', title: 'Network error', confirmButtonColor: '#ffb347'});
+      }
     }
   });
 };
@@ -378,7 +451,6 @@ window.confirmDeleteSelected = () => {
   }).then((result) => {
     if (result.isConfirmed) {
       habits = habits.filter((_, index) => !selectedToDelete.includes(index));
-      localStorage.setItem("habits", JSON.stringify(habits));
 
       deleteMode = false;
       selectedToDelete = [];
@@ -401,24 +473,32 @@ window.cancelDeleteMode = () => {
   selectedToDelete = [];
   renderHabits();
 };
-  
-if (deleteMode) return;
-  window.completeAll = () => {
-    const todayStr = new Date().toISOString().split("T")[0];
-    habits.forEach((h) => {
-      h.done = true;
-      if (!h.history) h.history = {};
-      h.history[todayStr] = true;
-    });
-    localStorage.setItem("habits", JSON.stringify(habits));
-    renderHabits();
-    buildCalendar();
-    renderWeeklyGrid();
+
+window.completeAll = async () => {
+    if (habits.length === 0) return;
+    
+    try {
+      const promises = habits.map(h => 
+        fetch('api/habits.php', {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          body: new URLSearchParams({
+            id: h.id,
+            title: h.title,
+            is_done: 1
+          })
+        })
+      );
+      await Promise.all(promises);
+      await loadHabits();
+    } catch (error) {
+      Swal.fire({icon: 'error', title: 'Complete failed', confirmButtonColor: '#ffb347'});
+    }
   };
 
   function updateProgress() {
     if (!elements.bar) return;
-    const done = habits.filter((h) => h.done).length;
+    const done = habits.filter((h) => h.is_done).length;
     const total = habits.length;
     const percent = total ? Math.round((done / total) * 100) : 0;
 
@@ -467,14 +547,12 @@ if (deleteMode) return;
   ];
   const grid = document.getElementById("calendar-grid");
 
-  /* -------- CALENDAR & WEEKLY GRID -------- */
-  const today = new Date(); // This gets the current real-time date
+  const today = new Date();
 
-  let currentMonth = today.getMonth(); // Will correctly show 2 (March)
+  let currentMonth = today.getMonth();
   let currentYear = today.getFullYear();
   let currentView = "month";
 
-  // Set weekStart to the Sunday of the CURRENT week
   let weekStart = new Date(today);
   weekStart.setDate(today.getDate() - today.getDay());
 
@@ -483,12 +561,25 @@ if (deleteMode) return;
   }
 
   function getDayProgress(dateStr) {
+    console.log('getDayProgress for date:', dateStr);
     if (habits.length === 0) return 0;
-    let done = 0;
-    habits.forEach((h) => {
-      if (h.history && h.history[dateStr]) done++;
-    });
-    return Math.round((done / habits.length) * 100);
+    
+    // Per-day tracking: only today gets current progress
+    const todayStr = new Date().toISOString().split('T')[0];
+    
+    if (dateStr === todayStr) {
+      let todayDone = 0;
+      habits.forEach((h) => {
+        if (h.is_done) todayDone++;
+      });
+      const percent = habits.length > 0 ? Math.round((todayDone / habits.length) * 100) : 0;
+      console.log('TODAY progress:', percent + '%');
+      return percent;
+    }
+    
+    // Other days: 0% (no historical data)
+    console.log(dateStr, 'no data → 0%');
+    return 0;
   }
 
   function getProgressColor(percent) {
@@ -504,7 +595,6 @@ if (deleteMode) return;
     if (!gridEl) return;
     gridEl.innerHTML = "";
     const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const today = new Date();
 
     for (let i = 0; i < 7; i++) {
       const day = new Date(weekStart);
@@ -646,13 +736,6 @@ if (deleteMode) return;
     updateMonthLabel();
   }
 
-  function renderWeeklyProgress() {
-    /* optional extra, can implement later */
-  }
-
-  /* -------- BUTTONS & NAVIGATION -------- */
-
-  // 1. Calendar View Buttons (Dapat nasa loob ng DOMContentLoaded)
   const viewMonthBtn = document.getElementById("viewMonth");
   const viewYearBtn = document.getElementById("viewYear");
   if (viewMonthBtn)
@@ -660,10 +743,7 @@ if (deleteMode) return;
   if (viewYearBtn)
     viewYearBtn.addEventListener("click", () => toggleCalendarView("year"));
 
-  // Initial Renders
-  renderHabits();
-  buildCalendar();
-  renderWeeklyGrid();
+loadHabits();
 }); // DITO NAGWAWAKAS ANG DOMContentLoaded
 
 /* -------- GLOBAL FUNCTIONS (Nasa labas para mabasa ng HTML onclick) -------- */
@@ -682,3 +762,4 @@ window.moveNavIndicator = function (percent) {
     indicator.style.left = percent + "%";
   }
 };
+

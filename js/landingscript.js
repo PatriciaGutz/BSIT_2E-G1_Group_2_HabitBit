@@ -81,29 +81,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
         [emailIn, passIn].forEach(el => el.addEventListener('input', validateLoginBtn));
 
-        loginForm.addEventListener('submit', (e) => {
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const storedUser = JSON.parse(localStorage.getItem('registeredUser'));
 
-            // 1. Check if ANY user exists
-            if (!storedUser) {
-                setError(emailIn, emailErr, "No account found. Please register first.");
-                return;
-            }
+            try {
+                const formData = {
+                    email: emailIn.value,
+                    password: passIn.value
+                };
 
-            // 2. Check if the SPECIFIC email entered matches the stored email
-            if (emailIn.value !== storedUser.email) {
-                setError(emailIn, emailErr, "No account found with this email.");
-                setError(passIn, passErr, ""); 
-                return;
-            }
+                const response = await fetch('/BSIT_2E-G1_Group_2_HabitBit/api/login.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
 
-            // 3. Email is correct, now check password
-            if (passIn.value === storedUser.password) {
-                window.location.href = "dashboard.php";
-            } else {
-                setError(passIn, passErr, "Incorrect password.");
-                setError(emailIn, emailErr, ""); 
+                const result = await response.json();
+
+                if (result.success) {
+                    window.location.href = "dashboard.php";
+                } else {
+                    setError(emailIn, emailErr, result.error || "Invalid credentials");
+                    setError(passIn, passErr, result.error || "Invalid credentials");
+                }
+            } catch (error) {
+                setError(emailIn, emailErr, "Network error. Check server.");
             }
         });
     }
@@ -163,18 +167,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
         [nameIn, lastNameIn, emailIn, passIn, confirmIn].forEach(el => el.addEventListener('input', validateRegBtn));
 
-        regForm.addEventListener('submit', (e) => {
+        regForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!regBtn.disabled) {
-                localStorage.setItem('registeredUser', JSON.stringify({
-                firstName: nameIn.value,
-                lastName: lastNameIn.value,
-                email: emailIn.value,
-                password: passIn.value
-                }));
+                try {
+                    const formData = {
+                        firstName: nameIn.value,
+                        lastName: lastNameIn.value,
+                        email: emailIn.value,
+                        password: passIn.value
+                    };
 
-                document.getElementById('successMsg').classList.remove('d-none');
-                setTimeout(() => { window.location.href = "dashboard.php"; }, 2000);
+                    const response = await fetch('/BSIT_2E-G1_Group_2_HabitBit/api/register.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        document.getElementById('successMsg').classList.remove('d-none');
+                        setTimeout(() => { window.location.href = "dashboard.php"; }, 2000);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Registration failed',
+                            text: result.error || 'Please try again',
+                            confirmButtonColor: '#ffb347'
+                        });
+                    }
+                } catch (error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Network error',
+                        text: 'Check if server is running',
+                        confirmButtonColor: '#ffb347'
+                    });
+                }
             }
         });
     }
