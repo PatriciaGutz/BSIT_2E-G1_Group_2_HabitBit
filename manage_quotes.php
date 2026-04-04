@@ -32,16 +32,13 @@ if (isset($_POST['save_quote'])) {
     }
 }
 // DELETE QUOTE
-if (isset($_POST['save_quote'])) {
-    $quote_text = mysqli_real_escape_string($conn, $_POST['quote_text']);
-    $insert_query = "
-        INSERT INTO user_quotes (user_id, quote_text, is_selected)
-        VALUES ('$user_id', '$quote_text', 0)
-    ";
-    if (mysqli_query($conn, $insert_query)) {
-        header('location: manage_quotes.php?status=added');
-        exit();
-    }
+if (isset($_GET['delete'])) {
+    $id = intval($_GET['delete']);
+
+    mysqli_query($conn, "DELETE FROM user_quotes WHERE id = $id AND user_id = '$user_id'");
+
+    header('location: manage_quotes.php?status=deleted');
+    exit();
 }
 ?>
 
@@ -145,12 +142,12 @@ if (isset($_POST['save_quote'])) {
                                     <a href="edit_quote.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-outline-warning rounded-pill px-3 me-1">
                                         <i class="bi bi-pencil-square"></i>
                                     </a>
-
-                                    <a href="manage_quotes.php?delete=<?php echo $row['id']; ?>" 
-                                       class="btn btn-sm btn-outline-danger rounded-pill px-3" 
-                                       onclick="return confirm('Sigurado ka bang buburahin mo ito?')">
+                                    <a href="javascript:void(0)"
+                                        class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                                        onclick="confirmDeleteQuote(<?php echo $row['id']; ?>)">
                                         <i class="bi bi-trash"></i>
                                     </a>
+                            
                                 </td>
                             </tr>
                         <?php } 
@@ -183,5 +180,25 @@ if (isset($_POST['save_quote'])) {
 </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+function confirmDeleteQuote(id) {
+    Swal.fire({
+        title: 'Delete quote?',
+        text: 'Are you sure? This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, delete it',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = 'manage_quotes.php?delete=' + id;
+        }
+    });
+}
+</script>
 </body>
 </html>

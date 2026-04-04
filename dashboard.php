@@ -5,12 +5,10 @@ include('db_connect.php');
 $user_id = isset($_SESSION['user_id']) ? intval($_SESSION['user_id']) : 0;
 date_default_timezone_set('Asia/Manila');
 
-
 $user_name = $_SESSION['firstname'] ?? "Habit Builder";
 
+// greeting
 $hour = (int)date("H");
-$greeting = "Good evening"; 
-
 if ($hour >= 5 && $hour < 12) {
     $greeting = "Good morning";
 } elseif ($hour >= 12 && $hour < 18) {
@@ -19,67 +17,99 @@ if ($hour >= 5 && $hour < 12) {
     $greeting = "Good evening";
 }
 
-$today_month = date("n"); 
-$today_date = date("j");  
-
-// get bday mula session
-$user_bday = isset($_SESSION['birthdate']) ? $_SESSION['birthdate'] : ""; 
-
+// birthday check
+$today_month = date("n");
+$today_date  = date("j");
+$user_bday   = $_SESSION['birthdate'] ?? "";
 $is_birthday = false;
+
 if (!empty($user_bday)) {
     $bday_parts = explode('-', $user_bday);
-    if (count($bday_parts) == 3) {
-        if ((int)$bday_parts[1] == $today_month && (int)$bday_parts[2] == $today_date) {
+    if (count($bday_parts) === 3) {
+        if ((int)$bday_parts[1] === $today_month && (int)$bday_parts[2] === $today_date) {
             $is_birthday = true;
         }
     }
 }
 
-// SPECIAL GREETING
-if ($today_month == 12 && $today_date == 25) {
+// count customized quotes
+$count_result = mysqli_query($conn, "
+    SELECT COUNT(*) AS total 
+    FROM user_quotes 
+    WHERE user_id = '$user_id'
+");
+$count_row   = mysqli_fetch_assoc($count_result);
+$total_quotes = (int)$count_row['total'];
+
+/*
+|--------------------------------------------------------------------------
+| QUOTE PRIORITY LOGIC
+|--------------------------------------------------------------------------
+| 1. pinned quote (forever)
+| 2. special day (birthday / holidays)
+| 3. customized quotes → DAILY
+| 4. built-in quotes → RANDOM PER REFRESH
+*/
+
+// 1️⃣ pinned quote (FOREVER)
+$check_selected = mysqli_query($conn, "
+    SELECT quote_text
+    FROM user_quotes
+    WHERE user_id = '$user_id' AND is_selected = 1
+    LIMIT 1
+");
+
+if ($check_selected && mysqli_num_rows($check_selected) > 0) {
+
+    $row = mysqli_fetch_assoc($check_selected);
+    $display_quote = $row['quote_text'];
+
+} 
+// 2️⃣ special greetings
+elseif ($today_month == 12 && $today_date == 25) {
+
     $display_quote = "🎄 Merry Christmas! Celebrate with joy and better habits!";
+
 } elseif ($today_month == 1 && $today_date == 1) {
+
     $display_quote = "🎆 Happy New Year! New Year, New Bits. Build your future today!";
+
 } elseif ($is_birthday) {
-    $display_quote = "🎂 Happy Birthday, " . $user_name . "! Another year to build great habits!";
-} else {
-    // 1. Check selected personal quote
-    $check_selected = mysqli_query($conn, "
+
+    $display_quote = "🎂 Happy Birthday, $user_name! Another year to build great habits!";
+
+} 
+// 3️⃣ customized quotes → DAILY rotation
+elseif ($total_quotes > 0) {
+
+    $daily_query = mysqli_query($conn, "
         SELECT quote_text
         FROM user_quotes
-        WHERE user_id = '$user_id' AND is_selected = 1
+        WHERE user_id = '$user_id'
+        ORDER BY MOD(id + DAYOFYEAR(CURDATE()), $total_quotes)
         LIMIT 1
     ");
 
-    if ($check_selected && mysqli_num_rows($check_selected) > 0) {
-        $row = mysqli_fetch_assoc($check_selected);
+    if ($daily_query && mysqli_num_rows($daily_query) > 0) {
+        $row = mysqli_fetch_assoc($daily_query);
         $display_quote = $row['quote_text'];
-    } else {
-        // 2. If no selected personal quote, get random personal quote
-        $personal_query = mysqli_query($conn, "
-            SELECT quote_text
-            FROM user_quotes
-            WHERE user_id = '$user_id'
-            ORDER BY RAND()
-            LIMIT 1
-        ");
-
-        if ($personal_query && mysqli_num_rows($personal_query) > 0) {
-            $row = mysqli_fetch_assoc($personal_query);
-            $display_quote = $row['quote_text'];
-        } else {
-            // 3. If user has no personal quotes, fallback to default quote
-            $default_query = mysqli_query($conn, "
-                SELECT quote_text
-                FROM quotes
-                ORDER BY RAND()
-                LIMIT 1
-            ");
-
-            $row = mysqli_fetch_assoc($default_query);
-            $display_quote = $row ? $row['quote_text'] : "Believe you can and you're halfway there.";
-        }
     }
+
+} 
+// 4️⃣ built-in quotes → RANDOM PER REFRESH
+else {
+
+    $default_query = mysqli_query($conn, "
+        SELECT quote_text
+        FROM quotes
+        ORDER BY RAND()
+        LIMIT 1
+    ");
+
+    $row = mysqli_fetch_assoc($default_query);
+    $display_quote = $row
+        ? $row['quote_text']
+        : "Believe you can and you're halfway there.";
 }
 ?>
 <!DOCTYPE html>
