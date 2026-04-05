@@ -71,16 +71,18 @@ document.addEventListener("DOMContentLoaded", function () {
 <main class="container py-5">
 <div class="container py-4">
     
-    <div class="d-flex align-items-center justify-content-between mb-4 px-md-4">
-        <div class="d-flex align-items-center gap-3">
-            <img id="profileAvatar" class="rounded-circle border shadow-sm" width="75">
-            <div>
-                <h4 id="profileName" class="fw-bold mb-0"></h4>
-                <small id="profileEmail" class="text-muted"></small>
-            </div>
-        </div>
-       <a href="api/logout.php" onclick="fetch('api/logout.php').then(()=>location.href='index.php')" class="btn btn-sm btn-outline-danger rounded-pill px-3">Log out ➜</a>
-    </div>
+     <div class="d-flex align-items-center gap-3">
+         <img id="profileAvatar" class="rounded-circle border shadow-sm" width="75">
+         <div>
+             <div class="d-flex align-items-center gap-2">
+                 <h4 id="profileName" class="fw-bold mb-0"></h4>
+                 <button class="btn btn-sm btn-light rounded-circle" onclick="openEditProfileModal()">
+                    <i class="bi bi-pencil-fill" style="font-size: 0.8rem;"></i>
+                 </button>
+             </div>
+         <small id="profileEmail" class="text-muted"></small>
+         </div>
+     </div>
 
     <div class="bg-white p-4 rounded-4 shadow-sm border mb-4 mx-md-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -101,10 +103,31 @@ document.addEventListener("DOMContentLoaded", function () {
     <div class="mx-md-4">
         <h6 class="fw-bold mb-3">My Habits List</h6>
         <div id="habit-list" class="bg-white p-2 rounded-3 shadow-sm border min-vh-25">
-            </div>
+         </div>
+    </div>
+    </div>
+</main>
+
+<div id="editProfileModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+    <div class="modal-content edit-habit"> 
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="h4 fw-bold mb-0">Edit Profile</h2>
+            <button class="btn-close btn-close-white" onclick="closeEditProfileModal()"></button>
+        </div>
+        
+        <div class="mb-3">
+            <label class="text-white small mb-1">First Name</label>
+            <input id="editFirstName" type="text" class="form-control border-0 rounded" placeholder="First Name">
+        </div>
+
+        <div class="mb-4">
+            <label class="text-white small mb-1">Last Name</label>
+            <input id="editLastName" type="text" class="form-control border-0 rounded" placeholder="Last Name">
+        </div>
+
+        <button class="btn btn-warning w-100 rounded-pill fw-bold py-2 shadow-sm" onclick="updateProfile()">Save Changes</button>
     </div>
 </div>
-</main>
 
 <div class="nav-wrapper nav-bar">
       <div class="app-nav d-flex justify-content-around align-items-center shadow-lg">
@@ -205,6 +228,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const navBar = document.querySelector('.app-nav');
     if(navBar) navBar.style.setProperty('--active-offset', '72%');
 });
+
+function openEditProfileModal() {
+    const modal = document.getElementById("editProfileModal");
+    const currentName = document.getElementById("profileName").innerText;
+    
+    const nameParts = currentName.split(' ');
+    document.getElementById("editFirstName").value = nameParts[0] || "";
+    document.getElementById("editLastName").value = nameParts.slice(1).join(' ') || "";
+
+    modal.style.display = "flex";
+}
+
+function closeEditProfileModal() {
+    document.getElementById("editProfileModal").style.display = "none";
+}
 </script>
 
 </body>

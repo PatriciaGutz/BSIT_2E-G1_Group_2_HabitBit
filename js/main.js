@@ -13,13 +13,13 @@ document.addEventListener("DOMContentLoaded", () => {
     text: document.getElementById("today-progress-text"),
     modalTitle: document.querySelector("#habitModal h2"),
     inputs: {
-    icon: document.getElementById("habitIcon"),
-    title: document.getElementById("habitTitle"),
-    repeat: document.getElementById("habitRepeat"),
-    hour: document.getElementById("habitHour"),
-    minute: document.getElementById("habitMinute"),
-    period: document.getElementById("habitPeriod"),
-    desc: document.getElementById("habitDesc"),
+      icon: document.getElementById("habitIcon"),
+      title: document.getElementById("habitTitle"),
+      repeat: document.getElementById("habitRepeat"),
+      hour: document.getElementById("habitHour"),
+      minute: document.getElementById("habitMinute"),
+      period: document.getElementById("habitPeriod"),
+      desc: document.getElementById("habitDesc"),
     },
   };
 
@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const habit = habits[index];
 
     if (elements.inputs.icon) elements.inputs.icon.value = habit.icon || "";
-    elements.inputs.repeat.value = habit.repeat_type || habit.repeat || 'Daily';
+    elements.inputs.repeat.value = habit.repeat_type || habit.repeat || "Daily";
     elements.inputs.desc.value = habit.description || habit.desc || "";
 
     if (habit.time_slot || habit.time) {
@@ -74,158 +74,166 @@ document.addEventListener("DOMContentLoaded", () => {
         const hm = timeParts[0].split(":");
         const period = timeParts[1];
 
-    if (hm.length === 2) {
-      elements.inputs.hour.value = String(parseInt(hm[0], 10));
-      elements.inputs.minute.value = hm[1];
-      elements.inputs.period.value = period;
+        if (hm.length === 2) {
+          elements.inputs.hour.value = String(parseInt(hm[0], 10));
+          elements.inputs.minute.value = hm[1];
+          elements.inputs.period.value = period;
+        }
+      }
     }
-  }
-}
 
     if (elements.modal) elements.modal.style.display = "flex";
     elements.modalTitle.innerText = "Edit Habit";
 
     const descBox = document.getElementById("descBox");
-    if ((habit.description || habit.desc) && descBox) descBox.style.display = "block";
+    if ((habit.description || habit.desc) && descBox)
+      descBox.style.display = "block";
   };
-  
+
   async function loadHabits() {
-  try {
-    const response = await fetch('api/habits.php');
-    console.log('Load habits status:', response.status);
-    if (!response.ok) {
-      console.error('Load habits failed:', await response.text());
+    try {
+      const response = await fetch("api/habits.php");
+      console.log("Load habits status:", response.status);
+      if (!response.ok) {
+        console.error("Load habits failed:", await response.text());
+      }
+      if (response.ok) {
+        habits = await response.json();
+        // Map DB fields to JS expected fields (preserve is_done)
+        habits = habits.map((h) => ({
+          ...h,
+          done: !!h.is_done,
+          repeat: h.repeat_type,
+          time: h.time_slot,
+          desc: h.description,
+        }));
+      }
+    } catch (error) {
+      console.error("Load habits failed:", error);
+      habits = [];
     }
-    if (response.ok) {
-      habits = await response.json();
-      // Map DB fields to JS expected fields (preserve is_done)
-      habits = habits.map(h => ({
-        ...h,
-        done: !!h.is_done,
-        repeat: h.repeat_type,
-        time: h.time_slot,
-        desc: h.description
-      }));
-    }
-  } catch (error) {
-    console.error('Load habits failed:', error);
-    habits = [];
-  }
-  renderHabits();
-  buildCalendar();
-  renderWeeklyGrid();
-}
-
-window.saveHabit = async () => {
-  const { icon, title, repeat, hour, minute, period, desc } = elements.inputs;
-
-  if (!icon.value.trim()) {
-    return Swal.fire({
-      icon: "error",
-      title: "Missing a bit!",
-      text: "Please enter a habit icon (emoji).",
-      confirmButtonColor: "#ffb347",
-    });
+    renderHabits();
+    buildCalendar();
+    renderWeeklyGrid();
   }
 
-  if (!title.value.trim()) {
-    return Swal.fire({
-      icon: "error",
-      title: "Missing a bit!",
-      text: "Please enter a habit title.",
-      confirmButtonColor: "#ffb347",
-    });
-  }
+  window.saveHabit = async () => {
+    const { icon, title, repeat, hour, minute, period, desc } = elements.inputs;
 
-  const hourValue = parseInt(hour.value, 10);
-  const minuteValue = parseInt(minute.value, 10);
-
-  if (isNaN(hourValue) || hourValue < 1 || hourValue > 12) {
-    return Swal.fire({
-      icon: "error",
-      title: "Invalid hour",
-      text: "Please enter an hour from 1 to 12.",
-      confirmButtonColor: "#ffb347",
-    });
-  }
-
-  if (isNaN(minuteValue) || minuteValue < 0 || minuteValue > 59) {
-    return Swal.fire({
-      icon: "error",
-      title: "Invalid minute",
-      text: "Please enter minutes from 0 to 59.",
-      confirmButtonColor: "#ffb347",
-    });
-  }
-
-  const formattedTime = `${hourValue}:${String(minuteValue).padStart(2, "0")} ${period.value}`;
-
-  const habitData = {
-    icon: icon.value.trim() || "✨",
-    title: title.value.trim(),
-    repeat_type: repeat.value || "Daily",
-    time_slot: formattedTime,
-    description: desc.value || "",
-    is_done: editIndex !== null ? (habits[editIndex].is_done || 0) : 0,
-  };
-
-  try {
-    const response = await fetch('api/habits.php', {
-      method: editIndex !== null ? 'PUT' : 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({ ...habitData, id: editIndex !== null ? habits[editIndex].id : '' })
-    });
-
-    const result = await response.json();
-
-    if (result.success) {
-      closeHabitModal();
-      await loadHabits();
-      Swal.fire({
-        icon: "success",
-        title: "Saved!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    } else {
-      Swal.fire({
+    if (!icon.value.trim()) {
+      return Swal.fire({
         icon: "error",
-        title: "Failed",
-        text: result.error || "Save failed",
+        title: "Missing a bit!",
+        text: "Please enter a habit icon (emoji).",
         confirmButtonColor: "#ffb347",
       });
     }
-  } catch (error) {
-    Swal.fire({
-      icon: "error",
-      title: "Network error",
-      text: "Check server connection",
-      confirmButtonColor: "#ffb347",
-    });
-  }
-};
+
+    if (!title.value.trim()) {
+      return Swal.fire({
+        icon: "error",
+        title: "Missing a bit!",
+        text: "Please enter a habit title.",
+        confirmButtonColor: "#ffb347",
+      });
+    }
+
+    const hourValue = parseInt(hour.value, 10);
+    const minuteValue = parseInt(minute.value, 10);
+
+    if (isNaN(hourValue) || hourValue < 1 || hourValue > 12) {
+      return Swal.fire({
+        icon: "error",
+        title: "Invalid hour",
+        text: "Please enter an hour from 1 to 12.",
+        confirmButtonColor: "#ffb347",
+      });
+    }
+
+    if (isNaN(minuteValue) || minuteValue < 0 || minuteValue > 59) {
+      return Swal.fire({
+        icon: "error",
+        title: "Invalid minute",
+        text: "Please enter minutes from 0 to 59.",
+        confirmButtonColor: "#ffb347",
+      });
+    }
+
+    const formattedTime = `${hourValue}:${String(minuteValue).padStart(2, "0")} ${period.value}`;
+
+    const habitData = {
+      icon: icon.value.trim() || "✨",
+      title: title.value.trim(),
+      repeat_type: repeat.value || "Daily",
+      time_slot: formattedTime,
+      description: desc.value || "",
+      is_done: editIndex !== null ? habits[editIndex].is_done || 0 : 0,
+    };
+
+    try {
+      const response = await fetch("api/habits.php", {
+        method: editIndex !== null ? "PUT" : "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          ...habitData,
+          id: editIndex !== null ? habits[editIndex].id : "",
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        closeHabitModal();
+        await loadHabits();
+        Swal.fire({
+          icon: "success",
+          title: "Saved!",
+          showConfirmButton: false,
+          timer: 1500,
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Failed",
+          text: result.error || "Save failed",
+          confirmButtonColor: "#ffb347",
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Network error",
+        text: "Check server connection",
+        confirmButtonColor: "#ffb347",
+      });
+    }
+  };
 
   // Update renderHabits
   window.renderHabits = function () {
-  if (!elements.list) return;
+    if (!elements.list) return;
 
-  const cardColors = ["#f7c6b6", "#bfeaf2", "#d8f3c0", "#fbe7a1", "#d9c2f0"];
+    const cardColors = ["#f7c6b6", "#bfeaf2", "#d8f3c0", "#fbe7a1", "#d9c2f0"];
 
-  if (habits.length === 0) {
-    elements.list.innerHTML = `<p class="text-center text-muted p-4">No habits yet. Tap + to start!</p>`;
-    updateProgress();
-    return;
-  }
+    if (habits.length === 0) {
+      elements.list.innerHTML = `<p class="text-center text-muted p-4">No habits yet. Tap + to start!</p>`;
+      updateProgress();
+      return;
+    }
 
-  elements.list.innerHTML = `
-  ${deleteMode ? `
+    elements.list.innerHTML = `
+  ${
+    deleteMode
+      ? `
     <div class="d-flex justify-content-end gap-2 mb-3">
       <button class="btn btn-danger btn-sm rounded-pill px-3" onclick="confirmDeleteSelected()">Delete Selected</button>
       <button class="btn btn-secondary btn-sm rounded-pill px-3" onclick="cancelDeleteMode()">Cancel</button>
     </div>
-  ` : ""}
+  `
+      : ""
+  }
   <div class="row g-3">
       ${habits
         .map((h, i) => {
@@ -250,8 +258,8 @@ window.saveHabit = async () => {
                 </div>
 
                 ${
-  deleteMode
-    ? `
+                  deleteMode
+                    ? `
       <button
         class="btn rounded-circle d-flex align-items-center justify-content-center"
         style="
@@ -267,7 +275,7 @@ window.saveHabit = async () => {
         ${selectedToDelete.includes(i) ? "✓" : ""}
       </button>
     `
-    : `
+                    : `
       <div class="dropdown">
         <button class="btn btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="color:#333;">
           <i class="bi bi-three-dots-vertical"></i>
@@ -291,7 +299,7 @@ window.saveHabit = async () => {
         </ul>
       </div>
     `
-}
+                }
               </div>
             </div>
           `;
@@ -300,199 +308,245 @@ window.saveHabit = async () => {
     </div>
   `;
 
-  updateProgress();
-};
+    updateProgress();
+  };
 
-window.toggleDone = async (i) => {
+  window.toggleDone = async (i) => {
     const habit = habits[i];
-    if (!habit.id) return Swal.fire({icon: 'warning', text: 'No ID', confirmButtonColor: '#ffb347'});
-    
+    if (!habit.id)
+      return Swal.fire({
+        icon: "warning",
+        text: "No ID",
+        confirmButtonColor: "#ffb347",
+      });
+
     const currentDoneState = habit.is_done || habit.done || false;
     const newDone = !currentDoneState;
-    
-    console.log('=== TOGGLE DEBUG ===');
-    console.log('Habit:', habit.id, 'Current:', currentDoneState, '→ New:', newDone);
-    console.log('Total habits:', habits.length, 'is_done count:', habits.filter(h=>h.is_done).length);
-    
+
+    console.log("=== TOGGLE DEBUG ===");
+    console.log(
+      "Habit:",
+      habit.id,
+      "Current:",
+      currentDoneState,
+      "→ New:",
+      newDone,
+    );
+    console.log(
+      "Total habits:",
+      habits.length,
+      "is_done count:",
+      habits.filter((h) => h.is_done).length,
+    );
+
     try {
-      const response = await fetch('api/habits.php', {
-        method: 'PUT',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      const response = await fetch("api/habits.php", {
+        method: "PUT",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({
           id: habit.id,
-          title: habit.title || 'Untitled',
-          is_done: newDone ? 1 : 0
-        })
+          title: habit.title || "Untitled",
+          is_done: newDone ? 1 : 0,
+        }),
       });
-      
-      console.log('Response status:', response.status);
+
+      console.log("Response status:", response.status);
       const result = await response.json();
-      console.log('API result:', result);
-      
+      console.log("API result:", result);
+
       if (result.success) {
-        console.log('Reloading habits...');
+        console.log("Reloading habits...");
         await loadHabits();
-        console.log('Post-reload habits:', habits.length, 'done:', habits.filter(h=>h.is_done).length);
-        console.log('Expected %:', Math.round((habits.filter(h=>h.is_done).length / habits.length)*100));
-        
+        console.log(
+          "Post-reload habits:",
+          habits.length,
+          "done:",
+          habits.filter((h) => h.is_done).length,
+        );
+        console.log(
+          "Expected %:",
+          Math.round(
+            (habits.filter((h) => h.is_done).length / habits.length) * 100,
+          ),
+        );
+
         Swal.fire({
-          icon: newDone ? 'success' : 'info',
-          title: newDone ? '✅ Done!' : '↩️ Undone',
+          icon: newDone ? "success" : "info",
+          title: newDone ? "✅ Done!" : "↩️ Undone",
           timer: 1200,
-          showConfirmButton: false
+          showConfirmButton: false,
         });
       } else {
-        console.error('API failed:', result);
-        Swal.fire({icon: 'error', text: result.error || 'API Error', confirmButtonColor: '#ffb347'});
+        console.error("API failed:", result);
+        Swal.fire({
+          icon: "error",
+          text: result.error || "API Error",
+          confirmButtonColor: "#ffb347",
+        });
       }
     } catch (error) {
-      console.error('Fetch error:', error);
-      Swal.fire({icon: 'error', title: 'Network Error', confirmButtonColor: '#ffb347'});
+      console.error("Fetch error:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Network Error",
+        confirmButtonColor: "#ffb347",
+      });
     }
   };
 
-
-window.deleteHabit = async (i) => {
-  const habit = habits[i];
-  if (!habit || !habit.id) {
-    Swal.fire({
-      icon: "warning",
-      title: "No habit selected",
-      confirmButtonColor: "#ffb347"
-    });
-    return;
-  }
-
-  Swal.fire({
-    title: "Delete habit?",
-    text: "Are you sure? This action cannot be undone.",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#333",
-    confirmButtonText: "Yes, delete it."
-  }).then(async (result) => {
-    if (result.isConfirmed) {
-      try {
-        const response = await fetch('api/habits.php', {
-          method: 'DELETE',
-          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-          body: new URLSearchParams({id: habit.id})
-        });
-        
-        const result = await response.json();
-        if (result.success) {
-          await loadHabits();
-        } else {
-          Swal.fire({icon: 'error', text: result.error, confirmButtonColor: '#ffb347'});
-        }
-      } catch (error) {
-        Swal.fire({icon: 'error', title: 'Network error', confirmButtonColor: '#ffb347'});
-      }
+  window.deleteHabit = async (i) => {
+    const habit = habits[i];
+    if (!habit || !habit.id) {
+      Swal.fire({
+        icon: "warning",
+        title: "No habit selected",
+        confirmButtonColor: "#ffb347",
+      });
+      return;
     }
-  });
-};
+
+    Swal.fire({
+      title: "Delete habit?",
+      text: "Are you sure? This action cannot be undone.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#333",
+      confirmButtonText: "Yes, delete it.",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await fetch("api/habits.php", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ id: habit.id }),
+          });
+
+          const result = await response.json();
+          if (result.success) {
+            await loadHabits();
+          } else {
+            Swal.fire({
+              icon: "error",
+              text: result.error,
+              confirmButtonColor: "#ffb347",
+            });
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: "error",
+            title: "Network error",
+            confirmButtonColor: "#ffb347",
+          });
+        }
+      }
+    });
+  };
 
   window.toggleDeleteMode = () => {
-  if (!habits || habits.length === 0) {
-    Swal.fire({
-      icon: "info",
-      title: "No habits yet",
-      text: "There is no habit to delete.",
-      confirmButtonColor: "#ffb347"
-    });
-    return;
-  }
-
-  deleteMode = !deleteMode;
-  selectedToDelete = [];
-
-  const fabMenu = document.getElementById("fabMenu");
-  if (fabMenu) fabMenu.classList.remove("open");
-
-  renderHabits();
-};
-
-window.toggleHabitSelection = (i) => {
-  if (!deleteMode) return;
-
-  const index = selectedToDelete.indexOf(i);
-
-  if (index > -1) {
-    selectedToDelete.splice(index, 1);
-  } else {
-    selectedToDelete.push(i);
-  }
-
-  renderHabits();
-};
-
-window.confirmDeleteSelected = () => {
-  if (!deleteMode) return;
-
-  if (selectedToDelete.length === 0) {
-    Swal.fire({
-      icon: "warning",
-      title: "No habits selected",
-      text: "Please select at least one habit to delete.",
-      confirmButtonColor: "#ffb347"
-    });
-    return;
-  }
-
-  Swal.fire({
-    title: "Delete selected habits?",
-    text: `You selected ${selectedToDelete.length} habit(s). This action cannot be undone.`,
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#333",
-    confirmButtonText: "Yes, delete them"
-  }).then((result) => {
-    if (result.isConfirmed) {
-      habits = habits.filter((_, index) => !selectedToDelete.includes(index));
-
-      deleteMode = false;
-      selectedToDelete = [];
-
-      renderHabits();
-
+    if (!habits || habits.length === 0) {
       Swal.fire({
-        icon: "success",
-        title: "Deleted!",
-        text: "Selected habits have been removed.",
-        timer: 1500,
-        showConfirmButton: false
+        icon: "info",
+        title: "No habits yet",
+        text: "There is no habit to delete.",
+        confirmButtonColor: "#ffb347",
       });
+      return;
     }
-  });
-};
 
-window.cancelDeleteMode = () => {
-  deleteMode = false;
-  selectedToDelete = [];
-  renderHabits();
-};
+    deleteMode = !deleteMode;
+    selectedToDelete = [];
 
-window.completeAll = async () => {
+    const fabMenu = document.getElementById("fabMenu");
+    if (fabMenu) fabMenu.classList.remove("open");
+
+    renderHabits();
+  };
+
+  window.toggleHabitSelection = (i) => {
+    if (!deleteMode) return;
+
+    const index = selectedToDelete.indexOf(i);
+
+    if (index > -1) {
+      selectedToDelete.splice(index, 1);
+    } else {
+      selectedToDelete.push(i);
+    }
+
+    renderHabits();
+  };
+
+  window.confirmDeleteSelected = () => {
+    if (!deleteMode) return;
+
+    if (selectedToDelete.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "No habits selected",
+        text: "Please select at least one habit to delete.",
+        confirmButtonColor: "#ffb347",
+      });
+      return;
+    }
+
+    Swal.fire({
+      title: "Delete selected habits?",
+      text: `You selected ${selectedToDelete.length} habit(s). This action cannot be undone.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#333",
+      confirmButtonText: "Yes, delete them",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        habits = habits.filter((_, index) => !selectedToDelete.includes(index));
+
+        deleteMode = false;
+        selectedToDelete = [];
+
+        renderHabits();
+
+        Swal.fire({
+          icon: "success",
+          title: "Deleted!",
+          text: "Selected habits have been removed.",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      }
+    });
+  };
+
+  window.cancelDeleteMode = () => {
+    deleteMode = false;
+    selectedToDelete = [];
+    renderHabits();
+  };
+
+  window.completeAll = async () => {
     if (habits.length === 0) return;
-    
+
     try {
-      const promises = habits.map(h => 
-        fetch('api/habits.php', {
-          method: 'PUT',
-          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      const promises = habits.map((h) =>
+        fetch("api/habits.php", {
+          method: "PUT",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body: new URLSearchParams({
             id: h.id,
             title: h.title,
-            is_done: 1
-          })
-        })
+            is_done: 1,
+          }),
+        }),
       );
       await Promise.all(promises);
       await loadHabits();
     } catch (error) {
-      Swal.fire({icon: 'error', title: 'Complete failed', confirmButtonColor: '#ffb347'});
+      Swal.fire({
+        icon: "error",
+        title: "Complete failed",
+        confirmButtonColor: "#ffb347",
+      });
     }
   };
 
@@ -561,24 +615,25 @@ window.completeAll = async () => {
   }
 
   function getDayProgress(dateStr) {
-    console.log('getDayProgress for date:', dateStr);
+    console.log("getDayProgress for date:", dateStr);
     if (habits.length === 0) return 0;
-    
+
     // Per-day tracking: only today gets current progress
-    const todayStr = new Date().toISOString().split('T')[0];
-    
+    const todayStr = new Date().toISOString().split("T")[0];
+
     if (dateStr === todayStr) {
       let todayDone = 0;
       habits.forEach((h) => {
         if (h.is_done) todayDone++;
       });
-      const percent = habits.length > 0 ? Math.round((todayDone / habits.length) * 100) : 0;
-      console.log('TODAY progress:', percent + '%');
+      const percent =
+        habits.length > 0 ? Math.round((todayDone / habits.length) * 100) : 0;
+      console.log("TODAY progress:", percent + "%");
       return percent;
     }
-    
+
     // Other days: 0% (no historical data)
-    console.log(dateStr, 'no data → 0%');
+    console.log(dateStr, "no data → 0%");
     return 0;
   }
 
@@ -654,112 +709,4 @@ window.completeAll = async () => {
     }
   }
 
-  function buildYearView(year) {
-    if (!grid) return;
-    grid.innerHTML = "";
-    grid.style.display = "flex";
-    grid.style.flexWrap = "wrap";
-    grid.style.justifyContent = "center";
-    grid.style.gap = "15px";
-
-    for (let m = 0; m < 12; m++) {
-      const monthBox = document.createElement("div");
-      monthBox.className = "month-box p-2 rounded-3 shadow-sm border";
-      monthBox.style.width = "220px";
-      monthBox.style.flexShrink = "0";
-      monthBox.innerHTML = `<div class="month-label fw-bold text-center mb-1">${monthNames[m]}</div>`;
-      const monthGrid = document.createElement("div");
-      monthGrid.style.display = "grid";
-      monthGrid.style.gridTemplateColumns = "repeat(7,1fr)";
-      monthGrid.style.gap = "3px";
-
-      const firstDay = new Date(year, m, 1).getDay();
-      const daysInMonth = new Date(year, m + 1, 0).getDate();
-      for (let i = 0; i < firstDay; i++) monthGrid.innerHTML += "<div></div>";
-
-      const today = new Date();
-      for (let day = 1; day <= daysInMonth; day++) {
-        const dateStr = formatDate(year, m, day);
-        const percent = getDayProgress(dateStr);
-        const color = getProgressColor(percent);
-        const border =
-          day === today.getDate() &&
-          m === today.getMonth() &&
-          year === today.getFullYear()
-            ? "border border-dark rounded"
-            : "";
-        monthGrid.innerHTML += `<div class="cal-box ${color} ${border}" title="${percent}%">${day}</div>`;
-      }
-      monthBox.appendChild(monthGrid);
-      grid.appendChild(monthBox);
-    }
-  }
-
-  function updateMonthLabel() {
-    const label = document.getElementById("month-label");
-    if (!label) return;
-    label.innerText =
-      currentView === "month"
-        ? `${monthNames[currentMonth]} ${currentYear}`
-        : `Year: ${currentYear}`;
-  }
-
-  window.changeMonth = (dir) => {
-    if (currentView === "month") {
-      currentMonth += dir;
-      if (currentMonth > 11) {
-        currentMonth = 0;
-        currentYear++;
-      }
-      if (currentMonth < 0) {
-        currentMonth = 11;
-        currentYear--;
-      }
-    } else currentYear += dir;
-    buildCalendar();
-  };
-
-  function toggleCalendarView(view) {
-    currentView = view;
-    const viewMonthBtn = document.getElementById("viewMonth");
-    const viewYearBtn = document.getElementById("viewYear");
-    if (viewMonthBtn && viewYearBtn) {
-      viewMonthBtn.classList.toggle("active", view === "month");
-      viewYearBtn.classList.toggle("active", view === "year");
-    }
-    buildCalendar();
-  }
-
-  function buildCalendar() {
-    if (currentView === "month") buildMonthView(currentMonth, currentYear);
-    else buildYearView(currentYear);
-    updateMonthLabel();
-  }
-
-  const viewMonthBtn = document.getElementById("viewMonth");
-  const viewYearBtn = document.getElementById("viewYear");
-  if (viewMonthBtn)
-    viewMonthBtn.addEventListener("click", () => toggleCalendarView("month"));
-  if (viewYearBtn)
-    viewYearBtn.addEventListener("click", () => toggleCalendarView("year"));
-
-loadHabits();
-}); // DITO NAGWAWAKAS ANG DOMContentLoaded
-
-/* -------- GLOBAL FUNCTIONS (Nasa labas para mabasa ng HTML onclick) -------- */
-
-window.toggleMenu = function () {
-  const fabMenu = document.getElementById("fabMenu");
-  if (fabMenu) {
-    fabMenu.classList.toggle("open");
-    console.log("Menu toggled!");
-  }
-};
-
-window.moveNavIndicator = function (percent) {
-  const indicator = document.querySelector(".nav-indicator");
-  if (indicator) {
-    indicator.style.left = percent + "%";
-  }
-};
-
+  
