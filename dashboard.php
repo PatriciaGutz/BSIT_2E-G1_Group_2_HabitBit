@@ -41,16 +41,6 @@ $count_result = mysqli_query($conn, "
 $count_row   = mysqli_fetch_assoc($count_result);
 $total_quotes = (int)$count_row['total'];
 
-/*
-|--------------------------------------------------------------------------
-| QUOTE PRIORITY LOGIC
-|--------------------------------------------------------------------------
-| 1. pinned quote (forever)
-| 2. special day (birthday / holidays)
-| 3. customized quotes → DAILY
-| 4. built-in quotes → RANDOM PER REFRESH
-*/
-
 // 1️⃣ pinned quote (FOREVER)
 $check_selected = mysqli_query($conn, "
     SELECT quote_text
