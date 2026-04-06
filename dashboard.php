@@ -5,10 +5,12 @@ include('db_connect.php');
 $user_id = isset($_SESSION['user_id']) ? intval($_SESSION['user_id']) : 0;
 date_default_timezone_set('Asia/Manila');
 
+
 $user_name = $_SESSION['firstname'] ?? "Habit Builder";
 
-// greeting
 $hour = (int)date("H");
+$greeting = "Good evening"; 
+
 if ($hour >= 5 && $hour < 12) {
     $greeting = "Good morning";
 } elseif ($hour >= 12 && $hour < 18) {
@@ -17,89 +19,67 @@ if ($hour >= 5 && $hour < 12) {
     $greeting = "Good evening";
 }
 
-// birthday check
-$today_month = date("n");
-$today_date  = date("j");
-$user_bday   = $_SESSION['birthdate'] ?? "";
-$is_birthday = false;
+$today_month = date("n"); 
+$today_date = date("j");  
 
+// get bday mula session
+$user_bday = isset($_SESSION['birthdate']) ? $_SESSION['birthdate'] : ""; 
+
+$is_birthday = false;
 if (!empty($user_bday)) {
     $bday_parts = explode('-', $user_bday);
-    if (count($bday_parts) === 3) {
-        if ((int)$bday_parts[1] === $today_month && (int)$bday_parts[2] === $today_date) {
+    if (count($bday_parts) == 3) {
+        if ((int)$bday_parts[1] == $today_month && (int)$bday_parts[2] == $today_date) {
             $is_birthday = true;
         }
     }
 }
 
-// count customized quotes
-$count_result = mysqli_query($conn, "
-    SELECT COUNT(*) AS total 
-    FROM user_quotes 
-    WHERE user_id = '$user_id'
-");
-$count_row   = mysqli_fetch_assoc($count_result);
-$total_quotes = (int)$count_row['total'];
-
-// 1️⃣ pinned quote (FOREVER)
-$check_selected = mysqli_query($conn, "
-    SELECT quote_text
-    FROM user_quotes
-    WHERE user_id = '$user_id' AND is_selected = 1
-    LIMIT 1
-");
-
-if ($check_selected && mysqli_num_rows($check_selected) > 0) {
-
-    $row = mysqli_fetch_assoc($check_selected);
-    $display_quote = $row['quote_text'];
-
-} 
-// 2️⃣ special greetings
-elseif ($today_month == 12 && $today_date == 25) {
-
+// SPECIAL GREETING
+if ($today_month == 12 && $today_date == 25) {
     $display_quote = "🎄 Merry Christmas! Celebrate with joy and better habits!";
-
 } elseif ($today_month == 1 && $today_date == 1) {
-
     $display_quote = "🎆 Happy New Year! New Year, New Bits. Build your future today!";
-
 } elseif ($is_birthday) {
-
-    $display_quote = "🎂 Happy Birthday, $user_name! Another year to build great habits!";
-
-} 
-// 3️⃣ customized quotes → DAILY rotation
-elseif ($total_quotes > 0) {
-
-    $daily_query = mysqli_query($conn, "
+    $display_quote = "🎂 Happy Birthday, " . $user_name . "! Another year to build great habits!";
+} else {
+    // 1. Check selected personal quote
+    $check_selected = mysqli_query($conn, "
         SELECT quote_text
         FROM user_quotes
-        WHERE user_id = '$user_id'
-        ORDER BY MOD(id + DAYOFYEAR(CURDATE()), $total_quotes)
+        WHERE user_id = '$user_id' AND is_selected = 1
         LIMIT 1
     ");
 
-    if ($daily_query && mysqli_num_rows($daily_query) > 0) {
-        $row = mysqli_fetch_assoc($daily_query);
+    if ($check_selected && mysqli_num_rows($check_selected) > 0) {
+        $row = mysqli_fetch_assoc($check_selected);
         $display_quote = $row['quote_text'];
+    } else {
+        // 2. If no selected personal quote, get random personal quote
+        $personal_query = mysqli_query($conn, "
+            SELECT quote_text
+            FROM user_quotes
+            WHERE user_id = '$user_id'
+            ORDER BY RAND()
+            LIMIT 1
+        ");
+
+        if ($personal_query && mysqli_num_rows($personal_query) > 0) {
+            $row = mysqli_fetch_assoc($personal_query);
+            $display_quote = $row['quote_text'];
+        } else {
+            // 3. If user has no personal quotes, fallback to default quote
+            $default_query = mysqli_query($conn, "
+                SELECT quote_text
+                FROM quotes
+                ORDER BY RAND()
+                LIMIT 1
+            ");
+
+            $row = mysqli_fetch_assoc($default_query);
+            $display_quote = $row ? $row['quote_text'] : "Believe you can and you're halfway there.";
+        }
     }
-
-} 
-// 4️⃣ built-in quotes → RANDOM PER REFRESH
-else {
-
-    $default_query = mysqli_query($conn, "
-        SELECT quote_text
-        FROM quotes
-        ORDER BY RAND()
-        LIMIT 1
-    ");
-
-    $row = mysqli_fetch_assoc($default_query);
-    $display_quote = $row
-        ? $row['quote_text']
-        : "Believe you can and you're halfway there.";
 }
 ?>
 <!DOCTYPE html>
@@ -215,76 +195,87 @@ else {
             </div>
          </div>
       <div id="habitModal" class="modal">
-         <div class="modal-content edit-habit">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-               <h2 class="h4 fw-bold mb-0">Create new Habit</h2>
-               <button class="btn-close btn-close-white" onclick="closeHabitModal()"></button>
+        <div class="modal-content edit-habit">
+
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="h4 fw-bold mb-0">Create new Habit</h2>
+            <button class="btn-close btn-close-white" onclick="closeHabitModal()"></button>
+          </div>
+
+          <!-- Category icon preview + Title -->
+          <div class="d-flex gap-2 mb-3">
+            <div class="bg-white rounded p-2 text-center d-flex align-items-center justify-content-center"
+                 style="width:60px;font-size:1.4rem;" id="categoryIconPreview">⭐</div>
+            <div class="bg-white rounded p-2 flex-grow-1 d-flex align-items-center">
+              <input id="habitTitle" type="text" placeholder="Habit title"
+                     class="w-100 border-0" style="outline:none;">
+              <button type="button" class="btn btn-sm btn-light rounded-circle info-btn-circle"
+                      onclick="toggleDesc()">i</button>
             </div>
-            <div class="d-flex gap-2 mb-3">
-               <div class="bg-white rounded p-2 text-center" style="width: 60px;">
-                  <input id="habitIcon" type="text" placeholder="Icon" class="w-100 border-0 text-center" style="outline: none;">
-               </div>
-               <div class="bg-white rounded p-2 flex-grow-1 d-flex align-items-center">
-                  <input id="habitTitle" type="text" placeholder="Title" class="w-100 border-0" style="outline: none;">
-                  <button type="button" class="btn btn-sm btn-light rounded-circle info-btn-circle" onclick="toggleDesc()">i</button>
-               </div>
+          </div>
+
+          <!-- Description -->
+          <div id="descBox" class="mb-3" style="display:none;">
+            <textarea id="habitDesc" class="form-control border-0 rounded"
+                      placeholder="Description (optional)" rows="2"></textarea>
+          </div>
+
+          <!-- Category -->
+          <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-white-50 mb-2">
+            <span>Category</span>
+            <select id="habitCategory"
+                    class="border-0 text-dark"
+                    style="outline:none;background-color:rgba(255,255,255,0.9);border-radius:6px;padding:2px 8px;"
+                    onchange="updateCategoryPreview()">
+              <option value="Personal">⭐ Personal</option>
+              <option value="Health">❤️ Health</option>
+              <option value="Study">📚 Study</option>
+              <option value="Fitness">🏋️ Fitness</option>
+              <option value="Work">💼 Work</option>
+            </select>
+          </div>
+
+          <!-- Repeat -->
+          <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-white-50 mb-2">
+            <span>Repeat</span>
+            <select id="habitRepeat"
+                    class="border-0 text-dark"
+                    style="outline:none;background-color:rgba(255,255,255,0.9);border-radius:6px;padding:2px 8px;">
+              <option value="Daily">Daily</option>
+              <option value="Weekdays">Weekdays</option>
+              <option value="Weekends">Weekends</option>
+              <option value="Every Monday">Every Monday</option>
+              <option value="Every Tuesday">Every Tuesday</option>
+              <option value="Every Wednesday">Every Wednesday</option>
+              <option value="Every Thursday">Every Thursday</option>
+              <option value="Every Friday">Every Friday</option>
+              <option value="Every Saturday">Every Saturday</option>
+              <option value="Every Sunday">Every Sunday</option>
+            </select>
+          </div>
+
+          <!-- Time -->
+          <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-white-50 mb-4">
+            <span>Set Time</span>
+            <div class="d-flex gap-2 align-items-center">
+              <input id="habitHour" type="number" min="1" max="12" placeholder="7"
+                     class="border-0 text-dark text-center"
+                     style="width:55px;outline:none;background-color:rgba(255,255,255,0.9);border-radius:6px;padding:2px 6px;">
+              <span class="text-white">:</span>
+              <input id="habitMinute" type="number" min="0" max="59" placeholder="00"
+                     class="border-0 text-dark text-center"
+                     style="width:55px;outline:none;background-color:rgba(255,255,255,0.9);border-radius:6px;padding:2px 6px;">
+              <select id="habitPeriod" class="border-0 text-dark"
+                      style="outline:none;background-color:rgba(255,255,255,0.9);border-radius:6px;padding:2px 6px;">
+                <option value="AM">AM</option>
+                <option value="PM">PM</option>
+              </select>
             </div>
-            <div id="descBox" class="mb-3" style="display: none;">
-               <textarea id="habitDesc" class="form-control border-0 rounded" placeholder="Description (optional)" rows="2"></textarea>
-            </div>
-            <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-white-50 mb-2">
-  <span>Repeat</span>
-  <select id="habitRepeat" class="border-0 text-dark" style="outline:none; background-color: rgba(255,255,255,0.9); border-radius:6px; padding:2px 6px;">
-    <option value="Daily">Daily</option>
-    <option value="Weekdays">Weekdays</option>
-    <option value="Weekends">Weekends</option>
-    <option value="Every Monday">Every Monday</option>
-    <option value="Every Tuesday">Every Tuesday</option>
-    <option value="Every Wednesday">Every Wednesday</option>
-    <option value="Every Thursday">Every Thursday</option>
-    <option value="Every Friday">Every Friday</option>
-    <option value="Every Saturday">Every Saturday</option>
-    <option value="Every Sunday">Every Sunday</option>
-  </select>
-</div>
+          </div>
 
-<div class="d-flex justify-content-between align-items-center py-2 border-bottom border-white-50 mb-4">
-  <span>Set Time</span>
-  <div class="d-flex gap-2 align-items-center">
-    <input
-      id="habitHour"
-      type="number"
-      min="1"
-      max="12"
-      placeholder="7"
-      class="border-0 text-dark text-center"
-      style="width: 55px; outline:none; background-color: rgba(255,255,255,0.9); border-radius:6px; padding:2px 6px;"
-    >
-
-    <span class="text-white">:</span>
-
-    <input
-      id="habitMinute"
-      type="number"
-      min="0"
-      max="59"
-      placeholder="00"
-      class="border-0 text-dark text-center"
-      style="width: 55px; outline:none; background-color: rgba(255,255,255,0.9); border-radius:6px; padding:2px 6px;"
-    >
-
-    <select
-      id="habitPeriod"
-      class="border-0 text-dark"
-      style="outline:none; background-color: rgba(255,255,255,0.9); border-radius:6px; padding:2px 6px;"
-    >
-      <option value="AM">AM</option>
-      <option value="PM">PM</option>
-    </select>
-  </div>
-</div>
-            <button class="btn btn-warning w-100 rounded-pill fw-bold py-2 shadow-sm" onclick="saveHabit()">Confirm</button>
-         </div>
+          <button class="btn btn-warning w-100 rounded-pill fw-bold py-2 shadow-sm"
+                  onclick="saveHabit()">Confirm</button>
+        </div>
       </div>
 
       <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

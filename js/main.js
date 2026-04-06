@@ -1,765 +1,830 @@
-document.addEventListener("DOMContentLoaded", () => {
-  /* -------- HABITS LOGIC -------- */
-  let deleteMode = false;
-  let selectedToDelete = [];
-  let habits = [];
-  let editIndex = null;
+/**
+ * main.js — HabitBit
+ * Fixes:
+ *  1. Habit creation (category → icon mapping, correct API call)
+ *  2. Calendar rendering (buildCalendar was missing, now implemented)
+ *  3. Calendar persistence (reads from habit_completions via API)
+ *  4. Category system (replaces manual icon picker)
+ */
 
+document.addEventListener("DOMContentLoaded", () => {
+
+  /* ================================================================
+     CATEGORY → ICON MAP
+  ================================================================ */
+  const CATEGORY_ICONS = {
+    Health:   "❤️",
+    Study:    "📚",
+    Fitness:  "🏋️",
+    Work:     "💼",
+    Personal: "⭐",
+  };
+
+  function categoryToIcon(cat) {
+    return CATEGORY_ICONS[cat] || "⭐";
+  }
+
+  /* ================================================================
+     STATE
+  ================================================================ */
+  let habits        = [];
+  let deleteMode    = false;
+  let selectedToDelete = [];
+  let editIndex     = null;
+
+  // Calendar state
+  const today       = new Date();
+  let currentMonth  = today.getMonth();      // 0-based
+  let currentYear   = today.getFullYear();
+  let currentView   = "month";
+  let calendarData  = {};   // { "YYYY-MM-DD": percent }
+
+  // Weekly tracker state
+  let weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - today.getDay());   // Sunday of current week
+
+  /* ================================================================
+     DOM REFS
+  ================================================================ */
   const elements = {
-    modal: document.getElementById("habitModal"),
-    list: document.getElementById("habit-list"),
-    bar: document.getElementById("today-progress-bar"),
-    count: document.getElementById("today-progress-count"),
-    text: document.getElementById("today-progress-text"),
+    modal:      document.getElementById("habitModal"),
+    list:       document.getElementById("habit-list"),
+    bar:        document.getElementById("today-progress-bar"),
+    count:      document.getElementById("today-progress-count"),
+    text:       document.getElementById("today-progress-text"),
     modalTitle: document.querySelector("#habitModal h2"),
     inputs: {
-    icon: document.getElementById("habitIcon"),
-    title: document.getElementById("habitTitle"),
-    repeat: document.getElementById("habitRepeat"),
-    hour: document.getElementById("habitHour"),
-    minute: document.getElementById("habitMinute"),
-    period: document.getElementById("habitPeriod"),
-    desc: document.getElementById("habitDesc"),
+      category: document.getElementById("habitCategory"),
+      title:    document.getElementById("habitTitle"),
+      repeat:   document.getElementById("habitRepeat"),
+      hour:     document.getElementById("habitHour"),
+      minute:   document.getElementById("habitMinute"),
+      period:   document.getElementById("habitPeriod"),
+      desc:     document.getElementById("habitDesc"),
     },
   };
 
+  /* ================================================================
+     HABIT MODAL
+  ================================================================ */
   window.openHabitModal = () => {
-    const fabMenu = document.getElementById("fabMenu");
-    if (fabMenu) fabMenu.classList.remove("open");
+    const fab = document.getElementById("fabMenu");
+    if (fab) fab.classList.remove("open");
 
-    if (elements.modal) {
-      elements.modal.style.display = "flex";
-      elements.modalTitle.innerText = "Create new Habit";
+    editIndex = null;
+    if (!elements.modal) return;
 
-      editIndex = null;
+    elements.modalTitle.innerText = "Create new Habit";
 
-      Object.values(elements.inputs).forEach((input) => {
-        if (input) input.value = "";
-      });
+    // Reset all inputs
+    if (elements.inputs.category) elements.inputs.category.value = "Personal";
+    if (elements.inputs.title)    elements.inputs.title.value    = "";
+    if (elements.inputs.repeat)   elements.inputs.repeat.value   = "Daily";
+    if (elements.inputs.hour)     elements.inputs.hour.value     = "";
+    if (elements.inputs.minute)   elements.inputs.minute.value   = "";
+    if (elements.inputs.period)   elements.inputs.period.value   = "AM";
+    if (elements.inputs.desc)     elements.inputs.desc.value     = "";
 
-      if (elements.inputs.repeat) elements.inputs.repeat.value = "Daily";
-      if (elements.inputs.hour) elements.inputs.hour.value = "";
-      if (elements.inputs.minute) elements.inputs.minute.value = "";
-      if (elements.inputs.period) elements.inputs.period.value = "AM";
-    }
+    const descBox = document.getElementById("descBox");
+    if (descBox) descBox.style.display = "none";
+
+    // Update icon preview
+    updateCategoryPreview();
+    elements.modal.style.display = "flex";
   };
+
   window.closeHabitModal = () => {
     if (elements.modal) elements.modal.style.display = "none";
     editIndex = null;
-    Object.values(elements.inputs).forEach((input) => {
-      if (input) input.value = "";
-    });
-    const descBox = document.getElementById("descBox");
-    if (descBox) descBox.style.display = "none";
   };
 
   window.toggleDesc = () => {
     const box = document.getElementById("descBox");
-    if (box)
-      box.style.display = box.style.display === "block" ? "none" : "block";
+    if (box) box.style.display = box.style.display === "block" ? "none" : "block";
+  };
+
+  // Live icon preview when category changes
+  window.updateCategoryPreview = () => {
+    const cat     = elements.inputs.category?.value || "Personal";
+    const preview = document.getElementById("categoryIconPreview");
+    if (preview) preview.innerText = categoryToIcon(cat);
   };
 
   window.editHabit = (index) => {
     editIndex = index;
-    const habit = habits[index];
+    const h   = habits[index];
 
-    if (elements.inputs.icon) elements.inputs.icon.value = habit.icon || "";
-    elements.inputs.repeat.value = habit.repeat_type || habit.repeat || 'Daily';
-    elements.inputs.desc.value = habit.description || habit.desc || "";
+    if (elements.inputs.category)
+      elements.inputs.category.value = h.category || "Personal";
+    if (elements.inputs.title)
+      elements.inputs.title.value = h.title || "";
+    if (elements.inputs.repeat)
+      elements.inputs.repeat.value = h.repeat_type || h.repeat || "Daily";
+    if (elements.inputs.desc)
+      elements.inputs.desc.value = h.description || h.desc || "";
 
-    if (habit.time_slot || habit.time) {
-      const timeStr = habit.time_slot || habit.time;
-      const timeParts = timeStr.split(" ");
-      if (timeParts.length === 2) {
-        const hm = timeParts[0].split(":");
-        const period = timeParts[1];
-
-    if (hm.length === 2) {
-      elements.inputs.hour.value = String(parseInt(hm[0], 10));
-      elements.inputs.minute.value = hm[1];
-      elements.inputs.period.value = period;
+    // Parse time_slot "7:00 AM"
+    const timeStr = h.time_slot || h.time || "";
+    const timeParts = timeStr.split(" ");
+    if (timeParts.length === 2) {
+      const hm = timeParts[0].split(":");
+      if (hm.length === 2) {
+        if (elements.inputs.hour)   elements.inputs.hour.value   = parseInt(hm[0], 10);
+        if (elements.inputs.minute) elements.inputs.minute.value = hm[1];
+        if (elements.inputs.period) elements.inputs.period.value = timeParts[1];
+      }
     }
-  }
-}
-
-    if (elements.modal) elements.modal.style.display = "flex";
-    elements.modalTitle.innerText = "Edit Habit";
 
     const descBox = document.getElementById("descBox");
-    if ((habit.description || habit.desc) && descBox) descBox.style.display = "block";
+    if (descBox && (h.description || h.desc))
+      descBox.style.display = "block";
+
+    updateCategoryPreview();
+    if (elements.modal) elements.modal.style.display = "flex";
+    if (elements.modalTitle) elements.modalTitle.innerText = "Edit Habit";
   };
-  
+
+  /* ================================================================
+     LOAD HABITS
+  ================================================================ */
   async function loadHabits() {
-  try {
-    const response = await fetch('api/habits.php');
-    console.log('Load habits status:', response.status);
-    if (!response.ok) {
-      console.error('Load habits failed:', await response.text());
-    }
-    if (response.ok) {
-      habits = await response.json();
-      // Map DB fields to JS expected fields (preserve is_done)
-      habits = habits.map(h => ({
+    try {
+      const res = await fetch("api/habits.php");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const raw = await res.json();
+      habits = raw.map((h) => ({
         ...h,
-        done: !!h.is_done,
-        repeat: h.repeat_type,
-        time: h.time_slot,
-        desc: h.description
+        done:        !!h.is_done,
+        repeat:      h.repeat_type,
+        time:        h.time_slot,
+        desc:        h.description,
+        category:    h.category || "Personal",
       }));
+    } catch (err) {
+      console.error("loadHabits error:", err);
+      habits = [];
     }
-  } catch (error) {
-    console.error('Load habits failed:', error);
-    habits = [];
-  }
-  renderHabits();
-  buildCalendar();
-  renderWeeklyGrid();
-}
-
-window.saveHabit = async () => {
-  const { icon, title, repeat, hour, minute, period, desc } = elements.inputs;
-
-  if (!icon.value.trim()) {
-    return Swal.fire({
-      icon: "error",
-      title: "Missing a bit!",
-      text: "Please enter a habit icon (emoji).",
-      confirmButtonColor: "#ffb347",
-    });
+    renderHabits();
+    updateProgress();
+    renderWeeklyGrid();
+    await loadCalendarData(currentYear, currentMonth + 1);  // month is 1-based for API
+    await loadWeekData(weekStart); // Refresh weekly data too
   }
 
-  if (!title.value.trim()) {
-    return Swal.fire({
-      icon: "error",
-      title: "Missing a bit!",
-      text: "Please enter a habit title.",
-      confirmButtonColor: "#ffb347",
-    });
-  }
+  /* ================================================================
+     SAVE HABIT (create / update)
+  ================================================================ */
+  window.saveHabit = async () => {
+    const { category, title, repeat, hour, minute, period, desc } = elements.inputs;
 
-  const hourValue = parseInt(hour.value, 10);
-  const minuteValue = parseInt(minute.value, 10);
-
-  if (isNaN(hourValue) || hourValue < 1 || hourValue > 12) {
-    return Swal.fire({
-      icon: "error",
-      title: "Invalid hour",
-      text: "Please enter an hour from 1 to 12.",
-      confirmButtonColor: "#ffb347",
-    });
-  }
-
-  if (isNaN(minuteValue) || minuteValue < 0 || minuteValue > 59) {
-    return Swal.fire({
-      icon: "error",
-      title: "Invalid minute",
-      text: "Please enter minutes from 0 to 59.",
-      confirmButtonColor: "#ffb347",
-    });
-  }
-
-  const formattedTime = `${hourValue}:${String(minuteValue).padStart(2, "0")} ${period.value}`;
-
-  const habitData = {
-    icon: icon.value.trim() || "✨",
-    title: title.value.trim(),
-    repeat_type: repeat.value || "Daily",
-    time_slot: formattedTime,
-    description: desc.value || "",
-    is_done: editIndex !== null ? (habits[editIndex].is_done || 0) : 0,
-  };
-
-  try {
-    const response = await fetch('api/habits.php', {
-      method: editIndex !== null ? 'PUT' : 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({ ...habitData, id: editIndex !== null ? habits[editIndex].id : '' })
-    });
-
-    const result = await response.json();
-
-    if (result.success) {
-      closeHabitModal();
-      await loadHabits();
-      Swal.fire({
-        icon: "success",
-        title: "Saved!",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    } else {
-      Swal.fire({
-        icon: "error",
-        title: "Failed",
-        text: result.error || "Save failed",
+    // Validation
+    if (!title || !title.value.trim()) {
+      return Swal.fire({
+        icon: "error", title: "Missing title",
+        text: "Please enter a habit title.",
         confirmButtonColor: "#ffb347",
       });
     }
-  } catch (error) {
-    Swal.fire({
-      icon: "error",
-      title: "Network error",
-      text: "Check server connection",
-      confirmButtonColor: "#ffb347",
-    });
-  }
-};
 
-  // Update renderHabits
+    const hourValue   = parseInt(hour?.value, 10);
+    const minuteValue = parseInt(minute?.value, 10);
+
+    if (isNaN(hourValue) || hourValue < 1 || hourValue > 12) {
+      return Swal.fire({
+        icon: "error", title: "Invalid hour",
+        text: "Please enter an hour from 1 to 12.",
+        confirmButtonColor: "#ffb347",
+      });
+    }
+    if (isNaN(minuteValue) || minuteValue < 0 || minuteValue > 59) {
+      return Swal.fire({
+        icon: "error", title: "Invalid minutes",
+        text: "Please enter minutes from 0 to 59.",
+        confirmButtonColor: "#ffb347",
+      });
+    }
+
+    const formattedTime = `${hourValue}:${String(minuteValue).padStart(2, "0")} ${period?.value || "AM"}`;
+    const selectedCat   = category?.value || "Personal";
+
+    const habitData = {
+      category:    selectedCat,
+      title:       title.value.trim(),
+      repeat_type: repeat?.value || "Daily",
+      time_slot:   formattedTime,
+      description: desc?.value || "",
+    };
+
+    if (editIndex !== null) {
+      habitData.id = habits[editIndex].id;
+    }
+
+    try {
+      const method   = editIndex !== null ? "PUT" : "POST";
+      const response = await fetch("api/habits.php", {
+        method,
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body:    new URLSearchParams(habitData),
+      });
+
+      if (!response.ok) {
+        const txt = await response.text();
+        throw new Error(`HTTP ${response.status}: ${txt}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        closeHabitModal();
+        await loadHabits();
+        Swal.fire({ icon: "success", title: "Saved!", showConfirmButton: false, timer: 1500 });
+      } else {
+        Swal.fire({
+          icon: "error", title: "Save failed",
+          text: result.error || "Unknown error",
+          confirmButtonColor: "#ffb347",
+        });
+      }
+    } catch (err) {
+      console.error("saveHabit error:", err);
+      Swal.fire({
+        icon: "error", title: "Network error",
+        text: err.message || "Check server connection",
+        confirmButtonColor: "#ffb347",
+      });
+    }
+  };
+
+  /* ================================================================
+     RENDER HABITS
+  ================================================================ */
+  const CARD_COLORS = ["#f7c6b6", "#bfeaf2", "#d8f3c0", "#fbe7a1", "#d9c2f0"];
+
   window.renderHabits = function () {
-  if (!elements.list) return;
+    if (!elements.list) return;
 
-  const cardColors = ["#f7c6b6", "#bfeaf2", "#d8f3c0", "#fbe7a1", "#d9c2f0"];
+    if (habits.length === 0) {
+      elements.list.innerHTML = `<p class="text-center text-muted p-4">No habits yet. Tap + to start!</p>`;
+      updateProgress();
+      return;
+    }
 
-  if (habits.length === 0) {
-    elements.list.innerHTML = `<p class="text-center text-muted p-4">No habits yet. Tap + to start!</p>`;
-    updateProgress();
-    return;
-  }
+    const deleteControls = deleteMode
+      ? `<div class="d-flex justify-content-end gap-2 mb-3">
+           <button class="btn btn-danger btn-sm rounded-pill px-3" onclick="confirmDeleteSelected()">Delete Selected</button>
+           <button class="btn btn-secondary btn-sm rounded-pill px-3" onclick="cancelDeleteMode()">Cancel</button>
+         </div>`
+      : "";
 
-  elements.list.innerHTML = `
-  ${deleteMode ? `
-    <div class="d-flex justify-content-end gap-2 mb-3">
-      <button class="btn btn-danger btn-sm rounded-pill px-3" onclick="confirmDeleteSelected()">Delete Selected</button>
-      <button class="btn btn-secondary btn-sm rounded-pill px-3" onclick="cancelDeleteMode()">Cancel</button>
-    </div>
-  ` : ""}
-  <div class="row g-3">
-      ${habits
-        .map((h, i) => {
-          const bgColor = cardColors[i % cardColors.length];
+    const cards = habits.map((h, i) => {
+      const bg       = CARD_COLORS[i % CARD_COLORS.length];
+      const icon     = categoryToIcon(h.category || "Personal");
+      const isSelected = selectedToDelete.includes(i);
 
-          return `
-            <div class="col-md-6">
-  <div 
-  class="habit-card ${deleteMode ? "delete-mode-card" : ""}" 
-  style="background-color: ${bgColor}; color: #333; cursor: ${deleteMode ? "pointer" : "default"}; border: ${deleteMode ? "2px dashed #d33" : "none"};"
->
-                <div class="habit-text-section">
-                  <div class="habit-title ${h.done ? "crossed-out" : ""}" style="color:#333;">
-                    ${h.icon || "✨"} ${h.title}
-                  </div>
-                  <div class="habit-meta" style="color:#333;">
-                    <i class="bi bi-calendar3"></i> Repeat: ${h.repeat}
-                  </div>
-                  <div class="habit-meta" style="color:#333;">
-                    ${h.time}
-                  </div>
-                </div>
+      const actionBtn = deleteMode
+        ? `<button
+             class="btn rounded-circle d-flex align-items-center justify-content-center"
+             style="width:32px;height:32px;border:2px solid #333;
+                    background:${isSelected ? "#d33" : "#fff"};
+                    color:${isSelected ? "#fff" : "#333"};flex-shrink:0;"
+             onclick="event.stopPropagation(); toggleHabitSelection(${i})"
+           >${isSelected ? "✓" : ""}</button>`
+        : `<div class="dropdown">
+             <button class="btn btn-sm dropdown-toggle" type="button"
+                     data-bs-toggle="dropdown" aria-expanded="false" style="color:#333;">
+               <i class="bi bi-three-dots-vertical"></i>
+             </button>
+             <ul class="dropdown-menu dropdown-menu-end">
+               <li><button class="dropdown-item" onclick="toggleDone(${i})">
+                 ${h.done ? "Mark as Undone" : "Mark as Done"}
+               </button></li>
+               <li><button class="dropdown-item" onclick="editHabit(${i})">Edit</button></li>
+               <li><button class="dropdown-item text-danger" onclick="deleteHabit(${i})">Delete</button></li>
+             </ul>
+           </div>`;
 
-                ${
-  deleteMode
-    ? `
-      <button
-        class="btn rounded-circle d-flex align-items-center justify-content-center"
-        style="
-          width: 32px;
-          height: 32px;
-          border: 2px solid #333;
-          background: ${selectedToDelete.includes(i) ? "#d33" : "#fff"};
-          color: ${selectedToDelete.includes(i) ? "#fff" : "#333"};
-          flex-shrink: 0;
-        "
-        onclick="event.stopPropagation(); toggleHabitSelection(${i})"
-      >
-        ${selectedToDelete.includes(i) ? "✓" : ""}
-      </button>
-    `
-    : `
-      <div class="dropdown">
-        <button class="btn btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="color:#333;">
-          <i class="bi bi-three-dots-vertical"></i>
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end">
-          <li>
-            <button class="dropdown-item" onclick="toggleDone(${i})">
-              ${h.done ? "Mark as Undone" : "Mark as Done"}
-            </button>
-          </li>
-          <li>
-            <button class="dropdown-item" onclick="editHabit(${i})">
-              Edit
-            </button>
-          </li>
-          <li>
-            <button class="dropdown-item text-danger" onclick="deleteHabit(${i})">
-              Delete
-            </button>
-          </li>
-        </ul>
-      </div>
-    `
-}
+      return `
+        <div class="col-md-6">
+          <div class="habit-card ${deleteMode ? "delete-mode-card" : ""}"
+               style="background-color:${bg};color:#333;cursor:${deleteMode ? "pointer" : "default"};
+                      border:${deleteMode ? "2px dashed #d33" : "none"};"
+               onclick="${deleteMode ? `toggleHabitSelection(${i})` : ""}">
+            <div class="habit-text-section">
+              <div class="habit-title ${h.done ? "crossed-out" : ""}" style="color:#333;">
+                ${icon} ${h.title}
+              </div>
+              <div class="habit-meta" style="color:#555;">
+                <span class="badge" style="background:#0002;color:#333;font-size:0.7rem;">${h.category || "Personal"}</span>
+                &nbsp;<i class="bi bi-calendar3"></i> ${h.repeat || h.repeat_type || "Daily"}
+              </div>
+              <div class="habit-meta" style="color:#555;">
+                <i class="bi bi-clock"></i> ${h.time || h.time_slot || ""}
               </div>
             </div>
-          `;
-        })
-        .join("")}
-    </div>
-  `;
+            <div class="d-flex align-items-center gap-2">
+              ${h.done ? `<span style="font-size:1.4rem;">✅</span>` : ""}
+              ${actionBtn}
+            </div>
+          </div>
+        </div>`;
+    }).join("");
 
-  updateProgress();
-};
+    elements.list.innerHTML = `${deleteControls}<div class="row g-3">${cards}</div>`;
+    updateProgress();
+  };
 
-window.toggleDone = async (i) => {
+  /* ================================================================
+     TOGGLE DONE  (persists via completions table)
+  ================================================================ */
+  window.toggleDone = async (i) => {
     const habit = habits[i];
-    if (!habit.id) return Swal.fire({icon: 'warning', text: 'No ID', confirmButtonColor: '#ffb347'});
-    
-    const currentDoneState = habit.is_done || habit.done || false;
-    const newDone = !currentDoneState;
-    
-    console.log('=== TOGGLE DEBUG ===');
-    console.log('Habit:', habit.id, 'Current:', currentDoneState, '→ New:', newDone);
-    console.log('Total habits:', habits.length, 'is_done count:', habits.filter(h=>h.is_done).length);
-    
+    if (!habit?.id) return Swal.fire({ icon: "warning", text: "No habit ID", confirmButtonColor: "#ffb347" });
+
+    const newDone = !habit.done;
+    const today   = formatDate(new Date());
+    const action  = newDone ? "complete" : "uncomplete";
+
     try {
-      const response = await fetch('api/habits.php', {
-        method: 'PUT',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: new URLSearchParams({
-          id: habit.id,
-          title: habit.title || 'Untitled',
-          is_done: newDone ? 1 : 0
-        })
+      const res = await fetch(`api/habits.php?action=${action}`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ habit_id: habit.id, date: today }),
       });
-      
-      console.log('Response status:', response.status);
-      const result = await response.json();
-      console.log('API result:', result);
-      
+      const result = await res.json();
+
       if (result.success) {
-        console.log('Reloading habits...');
         await loadHabits();
-        console.log('Post-reload habits:', habits.length, 'done:', habits.filter(h=>h.is_done).length);
-        console.log('Expected %:', Math.round((habits.filter(h=>h.is_done).length / habits.length)*100));
-        
         Swal.fire({
-          icon: newDone ? 'success' : 'info',
-          title: newDone ? '✅ Done!' : '↩️ Undone',
-          timer: 1200,
-          showConfirmButton: false
+          icon: newDone ? "success" : "info",
+          title: newDone ? "✅ Done!" : "↩️ Undone",
+          timer: 1200, showConfirmButton: false,
         });
       } else {
-        console.error('API failed:', result);
-        Swal.fire({icon: 'error', text: result.error || 'API Error', confirmButtonColor: '#ffb347'});
+        Swal.fire({ icon: "error", text: result.error || "API Error", confirmButtonColor: "#ffb347" });
       }
-    } catch (error) {
-      console.error('Fetch error:', error);
-      Swal.fire({icon: 'error', title: 'Network Error', confirmButtonColor: '#ffb347'});
+    } catch (err) {
+      console.error("toggleDone error:", err);
+      Swal.fire({ icon: "error", title: "Network error", confirmButtonColor: "#ffb347" });
     }
   };
 
+  /* ================================================================
+     COMPLETE ALL
+  ================================================================ */
+  window.completeAll = async () => {
+    if (!habits.length) return;
+    const today = formatDate(new Date());
 
-window.deleteHabit = async (i) => {
-  const habit = habits[i];
-  if (!habit || !habit.id) {
-    Swal.fire({
-      icon: "warning",
-      title: "No habit selected",
-      confirmButtonColor: "#ffb347"
-    });
-    return;
-  }
-
-  Swal.fire({
-    title: "Delete habit?",
-    text: "Are you sure? This action cannot be undone.",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#333",
-    confirmButtonText: "Yes, delete it."
-  }).then(async (result) => {
-    if (result.isConfirmed) {
-      try {
-        const response = await fetch('api/habits.php', {
-          method: 'DELETE',
-          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-          body: new URLSearchParams({id: habit.id})
-        });
-        
-        const result = await response.json();
-        if (result.success) {
-          await loadHabits();
-        } else {
-          Swal.fire({icon: 'error', text: result.error, confirmButtonColor: '#ffb347'});
-        }
-      } catch (error) {
-        Swal.fire({icon: 'error', title: 'Network error', confirmButtonColor: '#ffb347'});
-      }
+    try {
+      await Promise.all(
+        habits.map((h) =>
+          fetch("api/habits.php?action=complete", {
+            method:  "POST",
+            headers: { "Content-Type": "application/json" },
+            body:    JSON.stringify({ habit_id: h.id, date: today }),
+          })
+        )
+      );
+      await loadHabits();
+    } catch (err) {
+      Swal.fire({ icon: "error", title: "Complete failed", confirmButtonColor: "#ffb347" });
     }
-  });
-};
+  };
+
+  /* ================================================================
+     DELETE HABITS
+  ================================================================ */
+  window.deleteHabit = async (i) => {
+    const habit = habits[i];
+    if (!habit?.id) return;
+
+    const conf = await Swal.fire({
+      title: "Delete habit?", text: "This cannot be undone.",
+      icon: "warning", showCancelButton: true,
+      confirmButtonColor: "#d33", cancelButtonColor: "#333",
+      confirmButtonText: "Yes, delete",
+    });
+    if (!conf.isConfirmed) return;
+
+    try {
+      const res    = await fetch("api/habits.php", {
+        method:  "DELETE",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body:    new URLSearchParams({ id: habit.id }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        await loadHabits();
+      } else {
+        Swal.fire({ icon: "error", text: result.error, confirmButtonColor: "#ffb347" });
+      }
+    } catch (err) {
+      Swal.fire({ icon: "error", title: "Network error", confirmButtonColor: "#ffb347" });
+    }
+  };
 
   window.toggleDeleteMode = () => {
-  if (!habits || habits.length === 0) {
-    Swal.fire({
-      icon: "info",
-      title: "No habits yet",
-      text: "There is no habit to delete.",
-      confirmButtonColor: "#ffb347"
-    });
-    return;
-  }
-
-  deleteMode = !deleteMode;
-  selectedToDelete = [];
-
-  const fabMenu = document.getElementById("fabMenu");
-  if (fabMenu) fabMenu.classList.remove("open");
-
-  renderHabits();
-};
-
-window.toggleHabitSelection = (i) => {
-  if (!deleteMode) return;
-
-  const index = selectedToDelete.indexOf(i);
-
-  if (index > -1) {
-    selectedToDelete.splice(index, 1);
-  } else {
-    selectedToDelete.push(i);
-  }
-
-  renderHabits();
-};
-
-window.confirmDeleteSelected = () => {
-  if (!deleteMode) return;
-
-  if (selectedToDelete.length === 0) {
-    Swal.fire({
-      icon: "warning",
-      title: "No habits selected",
-      text: "Please select at least one habit to delete.",
-      confirmButtonColor: "#ffb347"
-    });
-    return;
-  }
-
-  Swal.fire({
-    title: "Delete selected habits?",
-    text: `You selected ${selectedToDelete.length} habit(s). This action cannot be undone.`,
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#333",
-    confirmButtonText: "Yes, delete them"
-  }).then((result) => {
-    if (result.isConfirmed) {
-      habits = habits.filter((_, index) => !selectedToDelete.includes(index));
-
-      deleteMode = false;
-      selectedToDelete = [];
-
-      renderHabits();
-
-      Swal.fire({
-        icon: "success",
-        title: "Deleted!",
-        text: "Selected habits have been removed.",
-        timer: 1500,
-        showConfirmButton: false
-      });
+    if (!habits.length) {
+      return Swal.fire({ icon: "info", title: "No habits yet", confirmButtonColor: "#ffb347" });
     }
-  });
-};
+    deleteMode = !deleteMode;
+    selectedToDelete = [];
+    const fab = document.getElementById("fabMenu");
+    if (fab) fab.classList.remove("open");
+    renderHabits();
+  };
 
-window.cancelDeleteMode = () => {
-  deleteMode = false;
-  selectedToDelete = [];
-  renderHabits();
-};
+  window.toggleHabitSelection = (i) => {
+    if (!deleteMode) return;
+    const idx = selectedToDelete.indexOf(i);
+    if (idx > -1) selectedToDelete.splice(idx, 1);
+    else selectedToDelete.push(i);
+    renderHabits();
+  };
 
-window.completeAll = async () => {
-    if (habits.length === 0) return;
-    
+  window.confirmDeleteSelected = async () => {
+    if (!selectedToDelete.length) {
+      return Swal.fire({ icon: "warning", title: "None selected", confirmButtonColor: "#ffb347" });
+    }
+
+    const conf = await Swal.fire({
+      title: `Delete ${selectedToDelete.length} habit(s)?`,
+      icon: "warning", showCancelButton: true,
+      confirmButtonColor: "#d33", cancelButtonColor: "#333",
+      confirmButtonText: "Yes, delete",
+    });
+    if (!conf.isConfirmed) return;
+
+    const ids = selectedToDelete.map((i) => habits[i]?.id).filter(Boolean);
+
     try {
-      const promises = habits.map(h => 
-        fetch('api/habits.php', {
-          method: 'PUT',
-          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-          body: new URLSearchParams({
-            id: h.id,
-            title: h.title,
-            is_done: 1
+      await Promise.all(
+        ids.map((id) =>
+          fetch("api/habits.php", {
+            method:  "DELETE",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body:    new URLSearchParams({ id }),
           })
-        })
+        )
       );
-      await Promise.all(promises);
-      await loadHabits();
-    } catch (error) {
-      Swal.fire({icon: 'error', title: 'Complete failed', confirmButtonColor: '#ffb347'});
+    } catch (err) {
+      console.error("Bulk delete error:", err);
+    }
+
+    deleteMode       = false;
+    selectedToDelete = [];
+    await loadHabits();
+    Swal.fire({ icon: "success", title: "Deleted!", timer: 1500, showConfirmButton: false });
+  };
+
+  window.cancelDeleteMode = () => {
+    deleteMode       = false;
+    selectedToDelete = [];
+    renderHabits();
+  };
+
+  /* ================================================================
+     PROGRESS BAR
+  ================================================================ */
+  function updateProgress() {
+    if (!elements.bar) return;
+    const done    = habits.filter((h) => h.is_done || h.done).length;
+    const total   = habits.length;
+    const percent = total ? Math.round((done / total) * 100) : 0;
+
+    elements.bar.style.width    = `${percent}%`;
+    if (elements.count) elements.count.innerText = `${done}/${total} Habits done`;
+    if (elements.text)  elements.text.innerText  = `${percent}%`;
+  }
+
+  /* ================================================================
+     UPDATE PROFILE
+  ================================================================ */
+  window.updateProfile = async () => {
+    const firstName = document.getElementById("editFirstName")?.value.trim();
+    const lastName  = document.getElementById("editLastName")?.value.trim();
+
+    if (!firstName || !lastName) {
+      return Swal.fire({ icon: "warning", title: "Both fields are required", confirmButtonColor: "#ffb347" });
+    }
+
+    try {
+      const res    = await fetch("api/update_profile.php", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ first_name: firstName, last_name: lastName }),
+      });
+      const result = await res.json();
+
+      if (result.success) {
+        const profileName = document.getElementById("profileName");
+        const profileAvatar = document.getElementById("profileAvatar");
+        const fullName = `${firstName} ${lastName}`;
+
+        if (profileName)   profileName.innerText = fullName;
+        if (profileAvatar) profileAvatar.src =
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=77D0A0&color=fff`;
+
+        document.getElementById("editProfileModal").style.display = "none";
+        Swal.fire({ icon: "success", title: "Profile updated!", timer: 1500, showConfirmButton: false });
+      } else {
+        Swal.fire({ icon: "error", text: result.message || "Update failed", confirmButtonColor: "#ffb347" });
+      }
+    } catch (err) {
+      Swal.fire({ icon: "error", title: "Network error", confirmButtonColor: "#ffb347" });
     }
   };
 
-  function updateProgress() {
-    if (!elements.bar) return;
-    const done = habits.filter((h) => h.is_done).length;
-    const total = habits.length;
-    const percent = total ? Math.round((done / total) * 100) : 0;
-
-    elements.bar.style.width = `${percent}%`;
-    elements.count.innerText = `${done}/${total} Habits done`;
-    elements.text.innerText = `${percent}%`;
-  }
-
-  /* -------- LOGIN STREAK -------- */
+  /* ================================================================
+     LOGIN STREAK  (localStorage — lightweight, non-critical)
+  ================================================================ */
   function updateConsecutiveDays() {
-    const today = new Date();
-    const todayStr = today.toISOString().split("T")[0];
-    const lastLoginStr = localStorage.getItem("lastLoginDate");
-    let streak = parseInt(localStorage.getItem("loginStreak")) || 0;
+    const todayStr    = formatDate(new Date());
+    const lastLogin   = localStorage.getItem("lastLoginDate");
+    let   streak      = parseInt(localStorage.getItem("loginStreak")) || 0;
 
-    if (lastLoginStr === todayStr) {
-    } else {
-      const yesterday = new Date(today);
-      yesterday.setDate(today.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split("T")[0];
-      streak = lastLoginStr === yesterdayStr ? streak + 1 : 1;
+    if (lastLogin !== todayStr) {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      streak = lastLogin === formatDate(yesterday) ? streak + 1 : 1;
       localStorage.setItem("lastLoginDate", todayStr);
       localStorage.setItem("loginStreak", streak);
     }
 
-    const streakEl = document.getElementById("login-streak");
-    if (streakEl) streakEl.innerText = `🔥 ${streak}`;
+    const el = document.getElementById("login-streak");
+    if (el) el.innerText = `🔥 ${streak}`;
   }
-
   updateConsecutiveDays();
 
-  /* -------- CALENDAR & WEEKLY GRID -------- */
-  const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-  const grid = document.getElementById("calendar-grid");
-
-  const today = new Date();
-
-  let currentMonth = today.getMonth();
-  let currentYear = today.getFullYear();
-  let currentView = "month";
-
-  let weekStart = new Date(today);
-  weekStart.setDate(today.getDate() - today.getDay());
-
-  function formatDate(y, m, d) {
-    return `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  /* ================================================================
+     HELPERS
+  ================================================================ */
+  function formatDate(dateObj) {
+    const y = dateObj.getFullYear();
+    const m = String(dateObj.getMonth() + 1).padStart(2, "0");
+    const d = String(dateObj.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
   }
 
-  function getDayProgress(dateStr) {
-    console.log('getDayProgress for date:', dateStr);
-    if (habits.length === 0) return 0;
-    
-    // Per-day tracking: only today gets current progress
-    const todayStr = new Date().toISOString().split('T')[0];
-    
-    if (dateStr === todayStr) {
-      let todayDone = 0;
-      habits.forEach((h) => {
-        if (h.is_done) todayDone++;
-      });
-      const percent = habits.length > 0 ? Math.round((todayDone / habits.length) * 100) : 0;
-      console.log('TODAY progress:', percent + '%');
-      return percent;
-    }
-    
-    // Other days: 0% (no historical data)
-    console.log(dateStr, 'no data → 0%');
-    return 0;
-  }
-
-  function getProgressColor(percent) {
-    if (percent === 100) return "bg-success text-white";
-    if (percent >= 75) return "bg-info text-white";
-    if (percent >= 50) return "bg-warning text-dark";
-    if (percent > 0) return "bg-peach";
+  function getProgressColor(pct) {
+    if (pct === 100) return "bg-success text-white";
+    if (pct >= 75)   return "bg-info text-white";
+    if (pct >= 50)   return "bg-warning text-dark";
+    if (pct > 0)     return "bg-peach";
     return "bg-light";
   }
 
-  function renderWeeklyGrid() {
-    const gridEl = document.getElementById("weekly-grid");
-    if (!gridEl) return;
-    gridEl.innerHTML = "";
-    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  /* ================================================================
+     MONTHLY NAMES
+  ================================================================ */
+  const MONTH_NAMES = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December",
+  ];
 
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(weekStart);
-      day.setDate(weekStart.getDate() + i);
-      const dateStr = formatDate(
-        day.getFullYear(),
-        day.getMonth(),
-        day.getDate(),
-      );
-      const percent = getDayProgress(dateStr);
-      const colorClass = getProgressColor(percent);
-      const isToday = day.toDateString() === new Date().toDateString();
-
-      const dayDiv = document.createElement("div");
-      dayDiv.className = `text-center day-item flex-fill px-2 py-3 rounded ${colorClass} ${isToday ? "border border-dark" : ""}`;
-      dayDiv.innerHTML = `${dayNames[i]}<br><span class="fw-bold">${day.getDate()}</span>`;
-      gridEl.appendChild(dayDiv);
+  /* ================================================================
+     CALENDAR — LOAD DATA FROM API
+  ================================================================ */
+  async function loadCalendarData(year, month) {
+    try {
+      const res = await fetch(`api/habits.php?action=calendar&year=${year}&month=${month}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      calendarData = json.data || {};
+    } catch (err) {
+      console.error("loadCalendarData error:", err);
+      calendarData = {};
     }
-    const weekLabel = document.getElementById("week-label");
-    if (weekLabel) {
-      weekLabel.innerText = `Week of ${monthNames[weekStart.getMonth()]} ${weekStart.getDate()}, ${weekStart.getFullYear()}`;
-    }
+    buildCalendar();
   }
-  window.changeWeek = (dir) => {
-    weekStart.setDate(weekStart.getDate() + dir * 7);
-    renderWeeklyGrid();
+
+  /* ================================================================
+     CALENDAR — BUILD VIEW  (month or year)
+  ================================================================ */
+  window.buildCalendar = function () {
+    const grid = document.getElementById("calendar-grid");
+    if (!grid) return;
+
+    if (currentView === "month") {
+      buildMonthView(currentMonth, currentYear);
+    } else {
+      buildYearView(currentYear);
+    }
   };
 
   function buildMonthView(month, year) {
+    const grid = document.getElementById("calendar-grid");
     if (!grid) return;
+
     grid.innerHTML = "";
-    grid.style.display = "grid";
+    grid.style.display             = "grid";
     grid.style.gridTemplateColumns = "repeat(7,1fr)";
-    grid.style.gap = "5px";
+    grid.style.gap                 = "5px";
 
-    ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach(
-      (h) =>
-        (grid.innerHTML += `<div class="fw-bold text-muted small text-center">${h}</div>`),
-    );
+    // Day headers
+    ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].forEach((day) => {
+      const el       = document.createElement("div");
+      el.className   = "fw-bold text-muted small text-center";
+      el.textContent = day;
+      grid.appendChild(el);
+    });
 
-    const firstDay = new Date(year, month, 1).getDay();
+    const firstDay    = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    for (let i = 0; i < firstDay; i++) grid.innerHTML += "<div></div>";
 
-    const today = new Date();
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dateStr = formatDate(year, month, day);
-      const percent = getDayProgress(dateStr);
-      const color = getProgressColor(percent);
-      const border =
-        day === today.getDate() &&
-        month === today.getMonth() &&
-        year === today.getFullYear()
-          ? "border border-dark rounded"
-          : "";
-      grid.innerHTML += `<div class="cal-box ${color} ${border} text-center"><div>${day}<div class="small fw-bold">${percent}%</div></div></div>`;
+    // Empty cells before 1st
+    for (let i = 0; i < firstDay; i++) {
+      grid.appendChild(document.createElement("div"));
     }
+
+    const todayStr = formatDate(today);
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const pct     = calendarData[dateStr] ?? 0;
+      const color   = getProgressColor(pct);
+      const isToday = dateStr === todayStr;
+
+      const cell       = document.createElement("div");
+      cell.className   = `cal-box calendar-day rounded ${color} ${isToday ? "border border-dark" : ""}`;
+      cell.innerHTML   = `
+        <div class="calendar-day">
+          <div class="day-num">${day}</div>
+          <div class="day-pct">${pct}%</div>
+        </div>`;
+      grid.appendChild(cell);
+    }
+
+    const label = document.getElementById("month-label");
+    if (label) label.innerText = `${MONTH_NAMES[month]} ${year}`;
   }
 
   function buildYearView(year) {
+    const grid = document.getElementById("calendar-grid");
     if (!grid) return;
-    grid.innerHTML = "";
-    grid.style.display = "flex";
-    grid.style.flexWrap = "wrap";
-    grid.style.justifyContent = "center";
-    grid.style.gap = "15px";
+
+    grid.style.display             = "grid";
+    grid.style.gridTemplateColumns = "repeat(4,1fr)";
+    grid.style.gap                 = "8px";
+    grid.innerHTML                 = "";
 
     for (let m = 0; m < 12; m++) {
-      const monthBox = document.createElement("div");
-      monthBox.className = "month-box p-2 rounded-3 shadow-sm border";
-      monthBox.style.width = "220px";
-      monthBox.style.flexShrink = "0";
-      monthBox.innerHTML = `<div class="month-label fw-bold text-center mb-1">${monthNames[m]}</div>`;
-      const monthGrid = document.createElement("div");
-      monthGrid.style.display = "grid";
-      monthGrid.style.gridTemplateColumns = "repeat(7,1fr)";
-      monthGrid.style.gap = "3px";
+      const card     = document.createElement("div");
+      card.className = "border rounded p-2 text-center small";
+      card.style.cursor = "pointer";
 
-      const firstDay = new Date(year, m, 1).getDay();
-      const daysInMonth = new Date(year, m + 1, 0).getDate();
-      for (let i = 0; i < firstDay; i++) monthGrid.innerHTML += "<div></div>";
+      // Count days with any completion in this month
+      const prefix    = `${year}-${String(m + 1).padStart(2, "0")}-`;
+      const activeDays = Object.keys(calendarData).filter(
+        (k) => k.startsWith(prefix) && calendarData[k] > 0
+      ).length;
+      const totalDays = new Date(year, m + 1, 0).getDate();
+      const pct       = totalDays ? Math.round((activeDays / totalDays) * 100) : 0;
+      const color     = getProgressColor(pct);
 
-      const today = new Date();
-      for (let day = 1; day <= daysInMonth; day++) {
-        const dateStr = formatDate(year, m, day);
-        const percent = getDayProgress(dateStr);
-        const color = getProgressColor(percent);
-        const border =
-          day === today.getDate() &&
-          m === today.getMonth() &&
-          year === today.getFullYear()
-            ? "border border-dark rounded"
-            : "";
-        monthGrid.innerHTML += `<div class="cal-box ${color} ${border}" title="${percent}%">${day}</div>`;
-      }
-      monthBox.appendChild(monthGrid);
-      grid.appendChild(monthBox);
+      card.innerHTML = `
+        <div class="fw-bold">${MONTH_NAMES[m].slice(0, 3)}</div>
+        <div class="mt-1 px-1 py-1 rounded ${color}" style="font-size:0.7rem;">
+          ${pct}%
+        </div>`;
+
+      card.addEventListener("click", () => {
+        currentMonth = m;
+        currentView  = "month";
+        document.getElementById("viewMonth")?.classList.add("active");
+        document.getElementById("viewYear")?.classList.remove("active");
+        buildMonthView(m, year);
+        const label = document.getElementById("month-label");
+        if (label) label.innerText = `${MONTH_NAMES[m]} ${year}`;
+      });
+
+      grid.appendChild(card);
     }
-  }
 
-  function updateMonthLabel() {
     const label = document.getElementById("month-label");
-    if (!label) return;
-    label.innerText =
-      currentView === "month"
-        ? `${monthNames[currentMonth]} ${currentYear}`
-        : `Year: ${currentYear}`;
+    if (label) label.innerText = `${year}`;
   }
 
-  window.changeMonth = (dir) => {
+  /* ================================================================
+     CALENDAR NAV
+  ================================================================ */
+  window.changeMonth = async (dir) => {
     if (currentView === "month") {
       currentMonth += dir;
-      if (currentMonth > 11) {
-        currentMonth = 0;
-        currentYear++;
-      }
-      if (currentMonth < 0) {
-        currentMonth = 11;
-        currentYear--;
-      }
-    } else currentYear += dir;
-    buildCalendar();
+      if (currentMonth < 0)  { currentMonth = 11; currentYear--; }
+      if (currentMonth > 11) { currentMonth = 0;  currentYear++; }
+      await loadCalendarData(currentYear, currentMonth + 1);
+    } else {
+      currentYear += dir;
+      await loadCalendarData(currentYear, 1);   // load whole year data
+      buildCalendar();
+    }
   };
 
-  function toggleCalendarView(view) {
-    currentView = view;
-    const viewMonthBtn = document.getElementById("viewMonth");
-    const viewYearBtn = document.getElementById("viewYear");
-    if (viewMonthBtn && viewYearBtn) {
-      viewMonthBtn.classList.toggle("active", view === "month");
-      viewYearBtn.classList.toggle("active", view === "year");
+  // Month / Year toggle buttons
+  document.getElementById("viewMonth")?.addEventListener("click", function () {
+    currentView = "month";
+    this.classList.add("active");
+    document.getElementById("viewYear")?.classList.remove("active");
+    loadCalendarData(currentYear, currentMonth + 1);
+  });
+
+  document.getElementById("viewYear")?.addEventListener("click", async function () {
+    currentView = "year";
+    this.classList.add("active");
+    document.getElementById("viewMonth")?.classList.remove("active");
+    // For year view, fetch all 12 months — simplest: fetch current month and build from stored
+    // We'll load all months for the year by making 12 requests combined
+    calendarData = {};
+    for (let m = 1; m <= 12; m++) {
+      try {
+        const res  = await fetch(`api/habits.php?action=calendar&year=${currentYear}&month=${m}`);
+        const json = await res.json();
+        Object.assign(calendarData, json.data || {});
+      } catch (_) { /* ignore */ }
     }
     buildCalendar();
+  });
+
+  /* ================================================================
+     WEEKLY TRACKER
+  ================================================================ */
+  function renderWeeklyGrid() {
+    const gridEl = document.getElementById("weekly-grid");
+    if (!gridEl) return;
+
+    gridEl.innerHTML = "";
+    const DAY_NAMES  = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+    const todayStr   = formatDate(today);
+
+    for (let i = 0; i < 7; i++) {
+      const day    = new Date(weekStart);
+      day.setDate(weekStart.getDate() + i);
+      const dateStr = formatDate(day);
+      const pct     = calendarData[dateStr] ?? 0;
+      const color   = getProgressColor(pct);
+      const isToday = dateStr === todayStr;
+
+      const div       = document.createElement("div");
+      div.className   = `day-item calendar-day rounded px-2 py-3 ${color} ${isToday ? "border border-dark" : ""}`;
+      div.innerHTML   = `<div class="day-num">${DAY_NAMES[i]} ${day.getDate()}</div>`;
+      gridEl.appendChild(div);
+    }
+
+    const label = document.getElementById("week-label");
+    if (label) {
+      label.innerText =
+        `Week of ${MONTH_NAMES[weekStart.getMonth()]} ${weekStart.getDate()}, ${weekStart.getFullYear()}`;
+    }
   }
 
-  function buildCalendar() {
-    if (currentView === "month") buildMonthView(currentMonth, currentYear);
-    else buildYearView(currentYear);
-    updateMonthLabel();
+  async function loadWeekData(weekStartDate) {
+    const months = new Set();
+    const dates = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(weekStartDate);
+      date.setDate(weekStartDate.getDate() + i);
+      const dateStr = formatDate(date);
+      dates.push(dateStr);
+      months.add(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`);
+    }
+    
+    // Load all relevant months
+    for (const monthStr of months) {
+      const [year, month] = monthStr.split('-').map(Number);
+      try {
+        const res = await fetch(`api/habits.php?action=calendar&year=${year}&month=${month}`);
+        if (res.ok) {
+          const json = await res.json();
+          Object.assign(calendarData, json.data || {});
+        }
+      } catch (err) {
+        console.error('loadWeekData month error:', err);
+      }
+    }
   }
 
-  const viewMonthBtn = document.getElementById("viewMonth");
-  const viewYearBtn = document.getElementById("viewYear");
-  if (viewMonthBtn)
-    viewMonthBtn.addEventListener("click", () => toggleCalendarView("month"));
-  if (viewYearBtn)
-    viewYearBtn.addEventListener("click", () => toggleCalendarView("year"));
+  window.changeWeek = async (dir) => {
+    weekStart.setDate(weekStart.getDate() + dir * 7);
+    await loadWeekData(weekStart);
+    renderWeeklyGrid();
+  };
 
-loadHabits();
-}); // DITO NAGWAWAKAS ANG DOMContentLoaded
+  /* ================================================================
+     FAB MENU
+  ================================================================ */
+  window.toggleMenu = () => {
+    const fab = document.getElementById("fabMenu");
+    if (fab) fab.classList.toggle("open");
+  };
 
-/* -------- GLOBAL FUNCTIONS (Nasa labas para mabasa ng HTML onclick) -------- */
+  window.moveNavIndicator = (percent) => {
+    const nav = document.querySelector(".app-nav");
+    if (nav) nav.style.setProperty("--active-offset", `${percent}%`);
+  };
 
-window.toggleMenu = function () {
-  const fabMenu = document.getElementById("fabMenu");
-  if (fabMenu) {
-    fabMenu.classList.toggle("open");
-    console.log("Menu toggled!");
-  }
-};
-
-window.moveNavIndicator = function (percent) {
-  const indicator = document.querySelector(".nav-indicator");
-  if (indicator) {
-    indicator.style.left = percent + "%";
-  }
-};
-
+  /* ================================================================
+     BOOTSTRAP
+  ================================================================ */
+  loadHabits();
+});
