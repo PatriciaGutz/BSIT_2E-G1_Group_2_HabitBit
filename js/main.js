@@ -164,11 +164,13 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("loadHabits error:", err);
       habits = [];
     }
+    await Promise.all([
+      loadCalendarData(currentYear, currentMonth + 1),
+      loadWeekData(weekStart)
+    ]);
     renderHabits();
     updateProgress();
     renderWeeklyGrid();
-    await loadCalendarData(currentYear, currentMonth + 1);  // month is 1-based for API
-    await loadWeekData(weekStart); // Refresh weekly data too
   }
 
   /* ================================================================
@@ -767,7 +769,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const div       = document.createElement("div");
       div.className   = `day-item calendar-day rounded px-2 py-3 ${color} ${isToday ? "border border-dark" : ""}`;
-      div.innerHTML   = `<div class="day-num">${DAY_NAMES[i]} ${day.getDate()}</div>`;
+      div.innerHTML   = `
+        <div class="calendar-day">
+          <div class="day-num">${DAY_NAMES[i]}<br><small>${day.getDate()}</small></div>
+        </div>`;
       gridEl.appendChild(div);
     }
 

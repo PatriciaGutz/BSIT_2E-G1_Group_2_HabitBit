@@ -181,10 +181,21 @@ body {
 }
 
 .day-num {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
   font-weight: 700;
   font-size: 1.1em;
-  line-height: 1;
+  line-height: 1.1;
   margin-bottom: 0;
+}
+
+.day-num small {
+  font-size: 0.8em;
+  font-weight: 400;
+  opacity: 0.9;
 }
 
 .cal-box .day-num {
@@ -201,6 +212,16 @@ body {
   font-weight: 600;
   opacity: 0.95;
   min-height: 0.85em;
+}
+
+.day-item .day-num small {
+  font-weight: normal;
+  opacity: 0.8;
+  font-size: 0.85em;
+}
+
+.day-item .calendar-day {
+  height: 100%;
 }
 .legend-dot {
   width: 14px;
