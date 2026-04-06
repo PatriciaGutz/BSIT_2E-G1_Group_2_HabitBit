@@ -110,17 +110,60 @@ if ($today_month == 12 && $today_date == 25) {
       </nav>
 
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold mb-0" id="greetingText"><?php echo $greeting; ?>,</h2>
             <h2 class="fw-bold" id="userNameText"><?php echo $user_name; ?>!</h2>
         </div>
 
         <div class="d-flex align-items-center bg-white p-2 rounded-pill shadow-sm border">
-            <span id="login-streak" class="me-2">🔥 0</span>
+            <span id="habit-streak" class="me-2 streak-display fw-bold" data-highest="0" style="cursor: help; min-width: 50px; text-align: center;">🔥 0</span>
             <img id="dashboardAvatar" src="https://ui-avatars.com/api/?name=<?php echo urlencode($user_name); ?>&background=77D0A0&color=fff" class="rounded-circle" width="32" alt="Profile">
         </div>
     </div>
+
+    <script>
+    let streakMode = 'current'; // 'current' or 'highest'
+    
+    // Load streak
+    fetch('api/streak.php')
+      .then(res => res.json())
+      .then(data => {
+        const el = document.getElementById('habit-streak');
+        if (el) {
+          el.dataset.current = data.current_streak || 0;
+          el.dataset.highest = data.highest_streak || 0;
+          updateStreakDisplay(el);
+        }
+      });
+
+    function updateStreakDisplay(el) {
+      const current = parseInt(el.dataset.current) || 0;
+      const highest = parseInt(el.dataset.highest) || 0;
+      
+      if (current === highest && current > 0) {
+        el.innerHTML = `<strong>🏆 ${current}</strong>`;
+        el.classList.add('streak-record');
+      } else {
+        el.textContent = `🔥 ${current}`;
+        el.classList.remove('streak-record');
+      }
+    }
+    
+    // Hover: show highest
+    document.getElementById('habit-streak').addEventListener('mouseenter', function() {
+      const highest = parseInt(this.dataset.highest) || 0;
+      if (highest > 0) {
+        const original = this.textContent;
+        this.title = `Highest: ⭐ ${highest}`;
+        this.style.fontSize = '1.1em';
+        setTimeout(() => {
+          this.style.fontSize = '';
+          this.title = '';
+        }, 1500);
+      }
+    });
+    </script>
 
 <div class="quote-container text-white p-4 rounded-5 text-center mb-4 shadow-sm position-relative">
         <a href="manage_quotes.php" class="position-absolute top-0 end-0 m-3 text-white opacity-50 text-decoration-none">

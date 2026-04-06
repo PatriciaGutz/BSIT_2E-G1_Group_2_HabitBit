@@ -35,12 +35,15 @@ if ($action === 'complete') {
     $stmt->bind_param('iis', $user_id, $habit_id, $date);
     $stmt->execute();
 
-    // Also flip is_done flag in habits table for today
+    // Flip is_done flag
     if ($date === date('Y-m-d')) {
         $upd = $conn->prepare('UPDATE habits SET is_done = 1 WHERE id = ? AND user_id = ?');
         $upd->bind_param('ii', $habit_id, $user_id);
         $upd->execute();
     }
+
+    // Update streak
+    updateHabitStreak($conn, $user_id, $date);
 
     sendJson(['success' => true]);
 }
@@ -60,14 +63,17 @@ if ($action === 'uncomplete') {
         WHERE user_id = ? AND habit_id = ? AND date_completed = ?
     ');
     $stmt->bind_param('iis', $user_id, $habit_id, $date);
-    $stmt->execute();
+$stmt->execute();
 
-    // Flip is_done back for today
+    // Flip is_done back
     if ($date === date('Y-m-d')) {
         $upd = $conn->prepare('UPDATE habits SET is_done = 0 WHERE id = ? AND user_id = ?');
         $upd->bind_param('ii', $habit_id, $user_id);
         $upd->execute();
     }
+
+    // Recalc streak (might need reset if no completions today)
+    updateHabitStreak($conn, $user_id, $date);
 
     sendJson(['success' => true]);
 }
@@ -284,6 +290,47 @@ switch ($method) {
 }
 
 // ── Helper ─────────────────────────────────────────────────────────────────
+function updateHabitStreak($conn, $user_id, $date = null) {
+    $today = $date ?: date('Y-m-d');
+    
+    // Check if user had ANY completion today
+    $chk = $conn->prepare('SELECT 1 FROM habit_completions WHERE user_id = ? AND date_completed = ? LIMIT 1');
+    $chk->bind_param('is', $user_id, $today);
+    $chk->execute();
+    $hasToday = $chk->get_result()->num_rows > 0;
+    
+    if (!$hasToday) {
+        // No completions today → reset streak to 0
+        $stmt = $conn->prepare('UPDATE users SET current_streak = 0 WHERE id = ?');
+        $stmt->bind_param('i', $user_id);
+        $stmt->execute();
+        return;
+    }
+    
+    // Check yesterday
+    $yesterday = date('Y-m-d', strtotime('-1 day'));
+    $chk_yest = $conn->prepare('SELECT 1 FROM habit_completions WHERE user_id = ? AND date_completed = ? LIMIT 1');
+    $chk_yest->bind_param('is', $user_id, $yesterday);
+    $chk_yest->execute();
+    $hadYesterday = $chk_yest->get_result()->num_rows > 0;
+    
+    $current = $hadYesterday ? 1 : 1; // Start/continue streak
+    
+    // Get existing
+    $get = $conn->prepare('SELECT current_streak, highest_streak FROM users WHERE id = ?');
+    $get->bind_param('i', $user_id);
+    $get->execute();
+    $row = $get->get_result()->fetch_assoc();
+    
+    $new_current = $hadYesterday ? ($row['current_streak'] + 1) : 1;
+    $new_highest = max($row['highest_streak'], $new_current);
+    
+    // Update
+    $stmt = $conn->prepare('UPDATE users SET current_streak = ?, highest_streak = ? WHERE id = ?');
+    $stmt->bind_param('iii', $new_current, $new_highest, $user_id);
+    $stmt->execute();
+}
+
 function categoryToIcon(string $category): string {
     $map = [
         'Health'   => '❤️',
@@ -294,3 +341,4 @@ function categoryToIcon(string $category): string {
     ];
     return $map[$category] ?? '⭐';
 }
+

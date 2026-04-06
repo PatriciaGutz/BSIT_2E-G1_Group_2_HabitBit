@@ -29,12 +29,14 @@ USE `habitbit_db`;
 -- ============================================================
 
 CREATE TABLE `users` (
-  `id`         INT(11)      NOT NULL AUTO_INCREMENT,
-  `first_name` VARCHAR(100) NOT NULL,
-  `last_name`  VARCHAR(100) NOT NULL,
-  `email`      VARCHAR(255) NOT NULL,
-  `password`   VARCHAR(255) NOT NULL,
-  `created_at` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `id`              INT(11)      NOT NULL AUTO_INCREMENT,
+  `first_name`      VARCHAR(100) NOT NULL,
+  `last_name`       VARCHAR(100) NOT NULL,
+  `email`           VARCHAR(255) NOT NULL,
+  `password`        VARCHAR(255) NOT NULL,
+  `current_streak`  INT(11)      DEFAULT 0,
+  `highest_streak`  INT(11)      DEFAULT 0,
+  `created_at`      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
