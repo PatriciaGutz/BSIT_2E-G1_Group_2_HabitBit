@@ -2,6 +2,10 @@
 // api/update_profile.php
 include 'config.php';
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 $user_id = getCurrentUserId();
 if (!$user_id) {
     sendJson(['success' => false, 'message' => 'Unauthorized'], 401);
@@ -27,8 +31,16 @@ $stmt = $conn->prepare('UPDATE users SET first_name = ?, last_name = ? WHERE id 
 $stmt->bind_param('ssi', $first_name, $last_name, $user_id);
 
 if ($stmt->execute()) {
-    $_SESSION['firstname'] = $first_name;
+    $_SESSION['firstname']  = $first_name; 
+    $_SESSION['first_name'] = $first_name;
+    $_SESSION['last_name']  = $last_name;
+    
+
+    if(isset($_SESSION['email'])) {
+        $_SESSION['email'] = $_SESSION['email']; 
+    }
+
     sendJson(['success' => true, 'message' => 'Profile updated']);
 } else {
-    sendJson(['success' => false, 'message' => 'Database update failed'], 500);
+    sendJson(['success' => false, 'message' => 'Database update failed: ' . $conn->error], 500);
 }

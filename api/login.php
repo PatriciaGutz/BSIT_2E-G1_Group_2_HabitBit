@@ -17,8 +17,7 @@ if (empty($email) || empty($password)) {
     sendJson(['error' => 'Email and password required'], 400);
 }
 
-// Find user
-$stmt = $conn->prepare('SELECT id, first_name, password FROM users WHERE email = ?');
+$stmt = $conn->prepare('SELECT id, first_name, last_name, password FROM users WHERE email = ?');
 $stmt->bind_param('s', $email);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -28,10 +27,11 @@ if (!$user || !password_verify($password, $user['password'])) {
     sendJson(['error' => 'Invalid credentials'], 401);
 }
 
-// Login success
 $_SESSION['user_id'] = $user['id'];
-$_SESSION['firstname'] = $user['first_name'];
+$_SESSION['first_name'] = $user['first_name'];
+$_SESSION['last_name'] = $user['last_name'];
+$_SESSION['firstname'] = $user['first_name']; // Fallback para sa ibang scripts mo
+$_SESSION['email'] = $email;
 
 sendJson(['success' => true, 'message' => 'Logged in successfully']);
 ?>
-

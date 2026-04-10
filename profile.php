@@ -3,7 +3,9 @@
 <?php session_start(); ?>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const phpFirstName = "<?php echo isset($_SESSION['firstname']) ? addslashes($_SESSION['firstname']) : ''; ?>";
+    // Kinukuha ang session data. Gumamit tayo ng fallback para sa 'firstname' o 'first_name'
+    const phpFirstName = "<?php echo isset($_SESSION['first_name']) ? addslashes($_SESSION['first_name']) : (isset($_SESSION['firstname']) ? addslashes($_SESSION['firstname']) : ''); ?>";
+    const phpLastName = "<?php echo isset($_SESSION['last_name']) ? addslashes($_SESSION['last_name']) : ''; ?>";
     const phpEmail = "<?php echo isset($_SESSION['email']) ? addslashes($_SESSION['email']) : ''; ?>";
     const phpUserId = "<?php echo isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 0; ?>";
 
@@ -16,13 +18,16 @@ document.addEventListener("DOMContentLoaded", function () {
     const profileEmail = document.getElementById("profileEmail");
     const profileAvatar = document.getElementById("profileAvatar");
 
-    const fallbackName = phpFirstName || 'User';
+    // Pinagsama na ang First at Last Name para hindi "User" o First Name lang ang lumabas sa simula
+    const fallbackName = (phpFirstName + " " + phpLastName).trim() || 'User';
     const fallbackEmail = phpEmail || 'No email available';
 
+    // Initial Display (mula sa Session)
     profileName.innerText = fallbackName;
     profileEmail.innerText = "🖂 " + fallbackEmail;
     profileAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(fallbackName)}&background=77D0A0&color=fff`;
 
+    // Fetch Fresh Data mula sa database (para siguradong updated)
     fetch('api/profile.php')
         .then(res => res.json())
         .then(user => {
@@ -30,13 +35,36 @@ document.addEventListener("DOMContentLoaded", function () {
                 const fullName = (user.first_name || '') + ' ' + (user.last_name || '');
                 const cleanName = fullName.trim() || fallbackName;
                 const cleanEmail = user.email || fallbackEmail;
+                
                 profileName.innerText = cleanName;
                 profileEmail.innerText = "🖂 " + cleanEmail;
                 profileAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName)}&background=77D0A0&color=fff`;
+                
+                // I-save ang data sa window object para magamit ng edit modal
+                window.currentUserData = user;
             }
         })
-        .catch(() => {});
+        .catch(() => {
+            console.log("Could not fetch fresh profile data, using session fallback.");
+        });
 });
+
+// Ito naman ang kukuha ng tamang data para sa Edit Modal
+function openEditProfileModal() {
+    const modal = document.getElementById("editProfileModal");
+    
+    if (window.currentUserData) {
+        document.getElementById("editFirstName").value = window.currentUserData.first_name || "";
+        document.getElementById("editLastName").value = window.currentUserData.last_name || "";
+    } else {
+        // Kung wala pang fetch result, kumuha sa display name
+        const currentName = document.getElementById("profileName").innerText;
+        const nameParts = currentName.split(' ');
+        document.getElementById("editFirstName").value = nameParts[0] || "";
+        document.getElementById("editLastName").value = nameParts.slice(1).join(' ') || "";
+    }
+    modal.style.display = "flex";
+}
 </script>
 <head>
   <meta charset="UTF-8" />
