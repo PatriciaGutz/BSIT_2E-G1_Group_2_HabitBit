@@ -38,22 +38,22 @@ body {
 #login-streak-container {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 16px;
+  gap: 16px;
+  padding: 12px 24px;
   background: white;
-  border-radius: 50px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  border-radius: 60px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.08);
 }
 
-#login-streak {
-  font-size: 1.8rem !important; 
+#login-streak, #habit-streak {
+  font-size: 1.9rem !important; 
   font-weight: 800;
   color: #ffb347;
 }
 
-#profileAvatar {
-  width: 55px !important; 
-  height: 55px !important;
+#profileAvatar, #dashboardAvatar {
+  width: 50px !important; 
+  height: 50px !important;
   border: 2px solid #77D0A0;
 }
 
@@ -397,6 +397,8 @@ body {
 .quote-management-card {
     background-color: #beffe3 !important; 
     border: 1px solid #86fdc2 !important;
+    border-width: 1px !important;
+    border-radius: 15px !important;
     position: relative;
     overflow: hidden;
 }
@@ -404,6 +406,8 @@ body {
 .built-in-card {
     background-color: #fcb88b !important; 
     border: 1px solid #ffe3a6 !important;
+    border-width: 1px !important;
+    border-radius: 15px !important;
     position: relative;
     overflow: hidden;
 }
@@ -633,7 +637,8 @@ body {
   justify-content: center;
   position: relative;
   overflow: hidden;
-  border-radius: 25px; 
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 20px; 
   box-shadow: 0 10px 30px rgba(142, 197, 252, 0.3);
 }
 
