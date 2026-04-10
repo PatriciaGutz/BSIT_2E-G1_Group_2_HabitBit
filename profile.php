@@ -233,11 +233,11 @@ function openEditProfileModal() {
     <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-white-50 mb-4">
       <span>Set Time</span>
       <div class="d-flex gap-2 align-items-center">
-        <input id="habitHour" type="number" min="1" max="12" placeholder="7"
+        <input id="habitHour" type="number" min="1" max="12" 
                class="border-0 text-dark text-center"
                style="width:55px;outline:none;background-color:rgba(255,255,255,0.9);border-radius:6px;padding:2px 6px;">
         <span class="text-white">:</span>
-        <input id="habitMinute" type="number" min="0" max="59" placeholder="00"
+        <input id="habitMinute" type="number" min="0" max="59"
                class="border-0 text-dark text-center"
                style="width:55px;outline:none;background-color:rgba(255,255,255,0.9);border-radius:6px;padding:2px 6px;">
         <select id="habitPeriod" class="border-0 text-dark"

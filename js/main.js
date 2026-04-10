@@ -260,7 +260,7 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ================================================================
      RENDER HABITS
   ================================================================ */
-  const CARD_COLORS = ["#f7c6b6", "#bfeaf2", "#d8f3c0", "#fbe7a1", "#d9c2f0"];
+const CARD_COLORS = ["#fab59e", "#a0eefc", "#c9f1a5", "#f5e199", "#d9c2f0"];
 
   window.renderHabits = function () {
     if (!elements.list) return;
@@ -285,13 +285,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const actionBtn = deleteMode
         ? `<button
-             class="btn rounded-circle d-flex align-items-center justify-content-center"
-             style="width:32px;height:32px;border:2px solid #333;
+             class="btn rounded-circle d-flex align-items-center justify-content-center position-absolute"
+             style="width:32px;height:32px;border:2px solid #333; top:15px; right:15px;
                     background:${isSelected ? "#d33" : "#fff"};
-                    color:${isSelected ? "#fff" : "#333"};flex-shrink:0;"
+                    color:${isSelected ? "#fff" : "#333"};z-index:10;"
              onclick="event.stopPropagation(); toggleHabitSelection(${i})"
            >${isSelected ? "✓" : ""}</button>`
-        : `<div class="dropdown">
+        : `<div class="dropdown position-absolute" style="top:15px; right:15px; z-index:10;">
              <button class="btn btn-sm dropdown-toggle" type="button"
                      data-bs-toggle="dropdown" aria-expanded="false" style="color:#333;">
                <i class="bi bi-three-dots-vertical"></i>
@@ -305,38 +305,38 @@ document.addEventListener("DOMContentLoaded", () => {
              </ul>
            </div>`;
 
+      // Vertical card 
       return `
-        <div class="col-md-6">
-          <div class="habit-card ${deleteMode ? "delete-mode-card" : ""}"
-               style="background-color:${bg};color:#333;cursor:${deleteMode ? "pointer" : "default"};
+          <div class="habit-card ${h.done ? "done-habit" : ""} ${deleteMode ? "delete-mode-card" : ""}"
+               style="background-color:${bg}; cursor:${deleteMode ? "pointer" : "default"};
                       border:${deleteMode ? "2px dashed #d33" : "none"};"
                onclick="${deleteMode ? `toggleHabitSelection(${i})` : ""}">
-            <div class="habit-text-section">
-              <div class="habit-title ${h.done ? "crossed-out" : ""}" style="color:#333;">
-                ${icon} ${h.title}
-              </div>
-              <div class="habit-meta" style="color:#555;">
-                <span class="badge" style="background:#0002;color:#333;font-size:0.7rem;">${h.category || "Personal"}</span>
-                &nbsp;<i class="bi bi-calendar3"></i> ${h.repeat || h.repeat_type || "Daily"}
-              </div>
-              <div class="habit-meta" style="color:#555;">
-                <i class="bi bi-clock"></i> ${h.time || h.time_slot || ""}
-              </div>
+            
+            ${actionBtn}
+
+            <div class="habit-icon-circle">
+               ${icon}
             </div>
-            <div class="d-flex align-items-center gap-2">
-              ${h.done ? `<span style="font-size:1.4rem;">✅</span>` : ""}
-              ${actionBtn}
+
+            <div class="habit-title ${h.done ? "crossed-out" : ""}">
+              ${h.title}
             </div>
-          </div>
-        </div>`;
+
+            <div class="habit-meta">
+              <span>${h.category || "Personal"}</span><br>
+              <i class="bi bi-clock"></i> ${h.time || h.time_slot || ""}
+            </div>
+
+            ${h.done ? `<div class="position-absolute bottom-0 start-0 m-3" style="font-size:1.4rem;">✅</div>` : ""}
+          </div>`;
     }).join("");
 
-    elements.list.innerHTML = `${deleteControls}<div class="row g-3">${cards}</div>`;
+    elements.list.innerHTML = `${deleteControls}<div class="row">${cards}</div>`;
     updateProgress();
   };
 
   /* ================================================================
-     TOGGLE DONE  (persists via completions table)
+     TOGGLE DONE 
   ================================================================ */
   window.toggleDone = async (i) => {
     const habit = habits[i];
@@ -540,22 +540,22 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ================================================================
      LOGIN STREAK  (localStorage — lightweight, non-critical)
   ================================================================ */
-  function updateConsecutiveDays() {
-    const todayStr    = formatDate(new Date());
-    const lastLogin   = localStorage.getItem("lastLoginDate");
-    let   streak      = parseInt(localStorage.getItem("loginStreak")) || 0;
+function updateConsecutiveDays() {
+  const todayStr  = formatDate(new Date());
+  const lastLogin = localStorage.getItem("lastLoginDate");
+  let streak      = parseInt(localStorage.getItem("loginStreak"), 10) || 0;
 
-    if (lastLogin !== todayStr) {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      streak = lastLogin === formatDate(yesterday) ? streak + 1 : 1;
-      localStorage.setItem("lastLoginDate", todayStr);
-      localStorage.setItem("loginStreak", streak);
-    }
-
-    const el = document.getElementById("login-streak");
-    if (el) el.innerText = `🔥 ${streak}`;
+  if (lastLogin !== todayStr) {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    streak = lastLogin === formatDate(yesterday) ? streak + 1 : 1;
+    localStorage.setItem("lastLoginDate", todayStr);
+    localStorage.setItem("loginStreak", streak);
   }
+
+  const el = document.getElementById("login-streak");
+  if (el) el.innerHTML = `🔥 ${streak}`;
+}
   updateConsecutiveDays();
 
   /* ================================================================
@@ -751,7 +751,7 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ================================================================
      WEEKLY TRACKER
   ================================================================ */
-  function renderWeeklyGrid() {
+function renderWeeklyGrid() {
     const gridEl = document.getElementById("weekly-grid");
     if (!gridEl) return;
 
@@ -767,12 +767,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const color   = getProgressColor(pct);
       const isToday = dateStr === todayStr;
 
-      const div       = document.createElement("div");
-      div.className   = `day-item calendar-day rounded px-2 py-3 ${color} ${isToday ? "border border-dark" : ""}`;
-      div.innerHTML   = `
-        <div class="calendar-day">
-          <div class="day-num">${DAY_NAMES[i]}<br><small>${day.getDate()}</small></div>
-        </div>`;
+      const div = document.createElement("div");
+      // Added 'active-day' for the current date highlight and 'border-dark' for the border
+      div.className = `day-item ${color} ${isToday ? "active-day border-dark" : ""}`;
+      
+      div.innerHTML = `
+        <span class="day-name">${DAY_NAMES[i]}</span>
+        <span class="day-number">${day.getDate()}</span>
+      `;
       gridEl.appendChild(div);
     }
 
@@ -814,7 +816,6 @@ document.addEventListener("DOMContentLoaded", () => {
     await loadWeekData(weekStart);
     renderWeeklyGrid();
   };
-
   /* ================================================================
      FAB MENU
   ================================================================ */
@@ -831,5 +832,6 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ================================================================
      BOOTSTRAP
   ================================================================ */
-  loadHabits();
+loadHabits();
+updateConsecutiveDays();
 });
