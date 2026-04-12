@@ -1,5 +1,5 @@
 <?php
-// api/habits.php — full CRUD + completions sub-resource
+// api/habits.php — full CRUD + completions sub-resource + completion_count
 include 'config.php';
 
 $user_id = getCurrentUserId();
@@ -7,8 +7,8 @@ if (!$user_id) {
     sendJson(['error' => 'Not authenticated'], 401);
 }
 
-$method    = $_SERVER['REQUEST_METHOD'];
-$action    = $_GET['action'] ?? '';
+$method = $_SERVER['REQUEST_METHOD'];
+$action = $_GET['action'] ?? '';
 
 // ── Completions: mark a habit done ─────────────────────────────────────────
 if ($action === 'complete') {
@@ -69,17 +69,17 @@ if ($action === 'loadHabits') {
     $stmt->bind_param('i', $user_id);
     $stmt->execute();
     $result = $stmt->get_result();
-    
+
     $habits = [];
     while ($row = $result->fetch_assoc()) {
         $habits[] = $row;
     }
-    
+
     sendJson(['data' => $habits]);
-    exit(); 
+    exit();
 }
 
-// ── ACTION: calendar (Accurate Percentage Logic) ──────────────────────────
+// ── ACTION: calendar ──────────────────────────────────────────────────────
 if ($action === 'calendar') {
     $year  = (int)($_GET['year']  ?? date('Y'));
     $month = (int)($_GET['month'] ?? date('n'));
@@ -115,11 +115,27 @@ if ($action === 'calendar') {
 // ── Standard CRUD (GET, POST, PUT, DELETE) ─────────────────────────────────
 switch ($method) {
     case 'GET':
+        /**
+         * ENHANCED GET: now includes `completion_count` (total times completed
+         * across all dates) and `last_completed_date` for sort-by-recent-completion.
+         * These fields power the Sort feature in HabitViewControls.
+         */
         $stmt = $conn->prepare('
-            SELECT h.*,
-                (SELECT COUNT(*) FROM habit_completions hc
+            SELECT
+                h.*,
+                (SELECT COUNT(*)
+                    FROM habit_completions hc
                     WHERE hc.habit_id = h.id AND hc.user_id = h.user_id
-                    AND hc.date_completed = CURDATE()) AS is_done_today
+                    AND hc.date_completed = CURDATE()
+                ) AS is_done_today,
+                (SELECT COUNT(*)
+                    FROM habit_completions hc2
+                    WHERE hc2.habit_id = h.id AND hc2.user_id = h.user_id
+                ) AS completion_count,
+                (SELECT MAX(hc3.date_completed)
+                    FROM habit_completions hc3
+                    WHERE hc3.habit_id = h.id AND hc3.user_id = h.user_id
+                ) AS last_completed_date
             FROM habits h
             WHERE h.user_id = ?
             ORDER BY h.created_at DESC
@@ -129,7 +145,8 @@ switch ($method) {
         $result = $stmt->get_result();
         $habits = [];
         while ($row = $result->fetch_assoc()) {
-            $row['is_done'] = (int)$row['is_done_today'];
+            $row['is_done']         = (int)$row['is_done_today'];
+            $row['completion_count'] = (int)$row['completion_count'];
             unset($row['is_done_today']);
             $habits[] = $row;
         }
@@ -137,11 +154,11 @@ switch ($method) {
         break;
 
     case 'POST':
-        $input = json_decode(file_get_contents('php://input'), true) ?: $_POST;
-        $title = trim($input['title'] ?? '');
-        $title = ucfirst($title);
+        $input     = json_decode(file_get_contents('php://input'), true) ?: $_POST;
+        $title     = trim($input['title'] ?? '');
+        $title     = ucfirst($title);
         $time_slot = trim($input['time_slot'] ?? '');
-        $category = trim($input['category'] ?? 'Personal');
+        $category  = trim($input['category'] ?? 'Personal');
 
         if (empty($title) || empty($time_slot)) sendJson(['error' => 'Title and Time slot are required'], 400);
 
@@ -152,7 +169,7 @@ switch ($method) {
 
         $icon = categoryToIcon($category);
         $stmt = $conn->prepare('INSERT INTO habits (user_id, icon, category, title, repeat_type, time_slot, description, is_done) VALUES (?, ?, ?, ?, ?, ?, ?, 0)');
-        $rep = $input['repeat_type'] ?? 'Daily';
+        $rep  = $input['repeat_type'] ?? 'Daily';
         $desc = $input['description'] ?? '';
         $stmt->bind_param('issssss', $user_id, $icon, $category, $title, $rep, $time_slot, $desc);
         $stmt->execute();
@@ -168,35 +185,70 @@ switch ($method) {
         if (!$habit_id) sendJson(['error' => 'id required'], 400);
 
         $updates = []; $params = []; $types = '';
-        // (Logic for updates stays the same as your original)
-        // ... abbreviated for clarity but keep your update logic here ...
+
+        if (isset($input['title'])) {
+            $updates[] = 'title = ?';
+            $params[]  = ucfirst(trim($input['title']));
+            $types    .= 's';
+        }
+        if (isset($input['category'])) {
+            $updates[] = 'category = ?';
+            $params[]  = trim($input['category']);
+            $types    .= 's';
+            $updates[] = 'icon = ?';
+            $params[]  = categoryToIcon(trim($input['category']));
+            $types    .= 's';
+        }
+        if (isset($input['repeat_type'])) {
+            $updates[] = 'repeat_type = ?';
+            $params[]  = trim($input['repeat_type']);
+            $types    .= 's';
+        }
+        if (isset($input['time_slot'])) {
+            $updates[] = 'time_slot = ?';
+            $params[]  = trim($input['time_slot']);
+            $types    .= 's';
+        }
+        if (isset($input['description'])) {
+            $updates[] = 'description = ?';
+            $params[]  = trim($input['description']);
+            $types    .= 's';
+        }
+
+        if (empty($updates)) sendJson(['error' => 'Nothing to update'], 400);
+
+        $sql   = 'UPDATE habits SET ' . implode(', ', $updates) . ' WHERE id = ? AND user_id = ?';
+        $types .= 'ii';
+        $params[] = $habit_id;
+        $params[] = $user_id;
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
         sendJson(['success' => true]);
         break;
 
-    // Sa loob ng switch ($method)
-case 'DELETE':
-   
-    $habit_id = (int)($_GET['id'] ?? 0);
-    
-    if (!$habit_id) {
-        
-        parse_str(file_get_contents('php://input'), $input);
-        $habit_id = (int)($input['id'] ?? 0);
-    }
+    case 'DELETE':
+        $habit_id = (int)($_GET['id'] ?? 0);
 
-    if ($habit_id > 0) {
-        $stmt = $conn->prepare('DELETE FROM habits WHERE id = ? AND user_id = ?');
-        $stmt->bind_param('ii', $habit_id, $user_id);
-        
-        if ($stmt->execute()) {
-            sendJson(['success' => true]);
-        } else {
-            sendJson(['error' => 'Delete failed'], 500);
+        if (!$habit_id) {
+            parse_str(file_get_contents('php://input'), $input);
+            $habit_id = (int)($input['id'] ?? 0);
         }
-    } else {
-        sendJson(['error' => 'Invalid ID'], 400);
-    }
-    exit(); 
+
+        if ($habit_id > 0) {
+            $stmt = $conn->prepare('DELETE FROM habits WHERE id = ? AND user_id = ?');
+            $stmt->bind_param('ii', $habit_id, $user_id);
+
+            if ($stmt->execute()) {
+                sendJson(['success' => true]);
+            } else {
+                sendJson(['error' => 'Delete failed'], 500);
+            }
+        } else {
+            sendJson(['error' => 'Invalid ID'], 400);
+        }
+        exit();
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -224,7 +276,7 @@ function updateHabitStreak($conn, $user_id, $date) {
 }
 
 function categoryToIcon($category) {
-    $map = ['Health'=>'❤️', 'Study'=>'📚', 'Fitness'=>'🏋️', 'Work'=>'💼', 'Personal'=>'⭐'];
+    $map = ['Health' => '❤️', 'Study' => '📚', 'Fitness' => '🏋️', 'Work' => '💼', 'Personal' => '⭐'];
     return $map[$category] ?? '⭐';
 }
 ?>
