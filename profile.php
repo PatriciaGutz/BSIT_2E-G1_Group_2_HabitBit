@@ -127,14 +127,14 @@ function openEditProfileModal() {
 
     <!-- ── Habits Section ──────────────────────────────────── -->
     <div class="mx-md-4">
-      <!-- Section Header: Title + Controls -->
+      <!--Title + Controls -->
       <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2" id="habitControlsBar">
         <h6 class="fw-bold mb-0">My Habits List</h6>
 
-        <!-- Controls Group: View Toggle + Filter + Sort -->
+        <!-- View Toggle + Filter + Sort -->
         <div class="hvc-controls-bar">
 
-          <!-- ① View Toggle -->
+          <!-- View Toggle -->
           <div class="hvc-view-group" role="group" aria-label="View toggle">
             <button id="viewGridBtn"
                     class="hvc-btn hvc-btn--active"
@@ -154,7 +154,7 @@ function openEditProfileModal() {
             </button>
           </div>
 
-          <!-- ② Filter Button + Dropdown -->
+          <!-- Filter Button + Dropdown -->
           <div class="hvc-filter-wrap hvc-dropdown-wrap">
             <button id="filterBtn"
                     class="hvc-btn"
@@ -192,7 +192,7 @@ function openEditProfileModal() {
             </div>
           </div>
 
-          <!-- ③ Sort Button + Dropdown -->
+          <!--Sort Button + Dropdown -->
           <div class="hvc-dropdown-wrap">
             <button id="sortBtn"
                     class="hvc-btn"
@@ -227,17 +227,16 @@ function openEditProfileModal() {
               </button>
             </div>
           </div>
-
-        </div><!-- /.hvc-controls-bar -->
+        </div>
       </div><!-- /.section-header -->
 
       <!-- Habit List Container -->
-      <div id="habit-list"
-           class="bg-white p-2 rounded-3 shadow-sm border min-vh-25"
-           data-view="grid">
-      </div>
+     <div class="profile-habit-container">
+    <div id="habit-list" 
+         class="bg-white p-2 rounded-3 shadow-sm border min-vh-25" 
+         data-view="grid">
+        </div>
 
-    </div><!-- /.mx-md-4 -->
   </div>
 </main>
 

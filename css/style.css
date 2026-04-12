@@ -1,5 +1,5 @@
 :root {
---hb-orange: #ffb347;
+  --hb-orange: #ffb347;
   --hb-teal: #77d0a0;
   --hb-blue: #93a4b1;
   --hb-dark: #333333;
@@ -125,12 +125,19 @@ body {
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important; 
   gap: 20px; 
   padding: 10px;
+  justify-content: center; /* Centers cards in the grid */
 }
 
 @media (min-width: 768px) {
   #habit-list .row {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
+    padding: 10px 30px; /* Adjust spacing for desktop */
   }
+}
+
+/* Specific spacing fix for Profile.php */
+.profile-habit-container {
+  padding: 0 25px !important; /* Prevents squeezing on sides */
 }
 
 .habit-card {
@@ -139,14 +146,18 @@ body {
   flex-direction: column !important; 
   align-items: center !important;
   justify-content: flex-start !important;
-  padding: 30px 15px !important; /* Increased top padding to push content down */
+  padding: 30px 15px !important;
   border-radius: 25px !important;
   position: relative;
   overflow: hidden;
-  border: none !important; /* Standard borders often conflict with border-radius */
-  /* Using box-shadow for a glow effect instead of border-image which breaks corners */
+  border: none !important;
   box-shadow: 0 0 0 2px #a8ff78, 0 4px 15px rgba(0,0,0,0.1) !important; 
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.habit-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 0 3px #77D0A0, 0 8px 20px rgba(0,0,0,0.15) !important;
 }
 
 /* logo in habit card */
@@ -162,7 +173,7 @@ body {
   background-repeat: no-repeat;
   opacity: 0.4;  
   pointer-events: none;
-  z-index: 1;  /*wrap txt*/
+  z-index: 1;
 }
 
 /*for content to stays above the logo */
@@ -193,7 +204,7 @@ body {
 }
 
 .habit-meta {
-  font-size: 1rem !important; /* Increased size */
+  font-size: 1rem !important; 
   font-weight: 500;
   opacity: 0.9;
   z-index: 2;
@@ -225,20 +236,38 @@ body {
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
 }
 
+/* UPDATED: Positive Completion Design */
 .habit-card.done-habit {
-  filter: grayscale(40%);
-  opacity: 0.85;
+  background: #f0fff4 !important; /* Soft green success background */
+  box-shadow: 0 0 0 3px #77D0A0, 0 4px 15px rgba(0,0,0,0.1) !important;
+  filter: none;
+  opacity: 1;
 }
 
 .habit-card.done-habit .habit-title {
-  text-decoration: line-through;
+  text-decoration: none !important; /* Removed negative line-through */
+  color: #2d6a4f !important;
 }
 
-.crossed-out {
-  text-decoration: line-through;
-  text-decoration-thickness: 2px;
-  opacity: 0.5;
+/* Checkmark indicator for positive feedback */
+.habit-card.done-habit::after {
+  content: '✓';
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: #77D0A0;
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: bold;
+  z-index: 3;
 }
+
 
 .habit-text-section {
   flex: 1;
@@ -259,14 +288,14 @@ body {
 
 /* Smaller Calendar Layout */
 .calendar-section {
-  max-width: 700px; /* Reduced width for appealing UI */
+  max-width: 700px; 
   margin: 0 auto;
 }
 
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 4px; /* Tighter gap */
+  gap: 4px; 
 }
 
 /* Mobile responsive */
@@ -628,7 +657,8 @@ body {
 .habit-row:hover {
   background-color: #fafafa;
 }
-/*Lilac quote rectangle */
+
+/* Lilac quote rectangle with Hover Effect */
 .quote-container {
   background: linear-gradient(135deg, var(--hb-lilac-start) 0%, var(--hb-lilac-end) 100%);
   min-height: 100px;
@@ -640,6 +670,77 @@ body {
   border: 1px solid rgba(255,255,255,0.3);
   border-radius: 20px; 
   box-shadow: 0 10px 30px rgba(142, 197, 252, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  overflow: visible !important;
+}
+
+.quote-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(142, 197, 252, 0.4);
+}
+
+/* QM Text toggle on hover */
+.quote-edit-wrapper {
+    display: inline-block;
+    cursor: pointer;
+    z-index: 100;
+}
+
+/* Tooltip styling */
+.quote-tooltip {
+    visibility: hidden;
+    opacity: 0;
+    background-color: #f8c277;
+    color: #ffffff;
+    text-align: center;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 1 rem;
+    font-weight: 600;
+    white-space: nowrap;
+    
+    position: absolute;
+    top: 50%;
+    left: 120%; 
+    transform: translateY(-50%);
+    
+    transition: all 0.3s ease;
+    box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.1);
+    pointer-events: none;
+}
+
+.quote-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: 100%; 
+    margin-top: -6px;
+    border-width: 6px;
+    border-style: solid;
+    border-color: transparent #ffb347 transparent transparent;
+}
+
+.quote-edit-wrapper:hover .quote-tooltip {
+    visibility: visible;
+    opacity: 1;
+    left: 135%; 
+
+}
+.quote-container:hover .quote-tooltip {
+    visibility: visible;
+    opacity: 1;
+    left: 140%;
+}
+
+.quote-edit-wrapper:hover .bi-pencil-square {
+    opacity: 1;
+    transform: scale(1.2);
+    transition: transform 0.2s;
+}
+/* Spacing for profile habit grid */
+.profile-habit-container {
+    padding: 0 15px !important;
 }
 
 .quote-icon-box {

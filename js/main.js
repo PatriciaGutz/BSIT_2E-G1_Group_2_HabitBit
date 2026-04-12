@@ -1,11 +1,3 @@
-/**
- * main.js — HabitBit
- * Fixes:
- *  1. Habit creation (category → icon mapping, correct API call)
- *  2. Calendar rendering (buildCalendar was missing, now implemented)
- *  3. Calendar persistence (reads from habit_completions via API)
- *  4. Category system (replaces manual icon picker)
- */
 
 document.addEventListener("DOMContentLoaded", () => {
   /* ================================================================
@@ -40,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Weekly tracker state
   let weekStart = new Date(today);
-  weekStart.setDate(today.getDate() - today.getDay()); // Sunday of current week
+  weekStart.setDate(today.getDate() - today.getDay()); 
 
   /* ================================================================
      DOM REFS
@@ -346,51 +338,54 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ================================================================
      TOGGLE DONE 
   ================================================================ */
-  window.toggleDone = async (i) => {
-    const habit = habits[i];
-    if (!habit?.id)
-      return Swal.fire({
-        icon: "warning",
-        text: "No habit ID",
-        confirmButtonColor: "#ffb347",
+ window.toggleDone = async (i) => {
+  const habit = habits[i];
+  if (!habit?.id)
+    return Swal.fire({
+      icon: "warning",
+      text: "No habit ID",
+      confirmButtonColor: "#ffb347",
+    });
+
+  const newDone = !habit.done;
+  
+  // If undoing, use the recorded completion date; if completing, use today.
+  const targetDate = !newDone && habit.completed_at ? habit.completed_at : formatDate(new Date());
+  const action = newDone ? "complete" : "uncomplete";
+
+  try {
+    const res = await fetch(`api/habits.php?action=${action}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ habit_id: habit.id, date: targetDate }),
+    });
+    const result = await res.json();
+
+    if (result.success) {
+      await loadHabits();
+      Swal.fire({
+        icon: newDone ? "success" : "info",
+        title: newDone ? "✅ Done!" : "↩️ Undone",
+        timer: 1200,
+        showConfirmButton: false,
       });
-
-    const newDone = !habit.done;
-    const today = formatDate(new Date());
-    const action = newDone ? "complete" : "uncomplete";
-
-    try {
-      const res = await fetch(`api/habits.php?action=${action}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ habit_id: habit.id, date: today }),
-      });
-      const result = await res.json();
-
-      if (result.success) {
-        await loadHabits();
-        Swal.fire({
-          icon: newDone ? "success" : "info",
-          title: newDone ? "✅ Done!" : "↩️ Undone",
-          timer: 1200,
-          showConfirmButton: false,
-        });
-      } else {
-        Swal.fire({
-          icon: "error",
-          text: result.error || "API Error",
-          confirmButtonColor: "#ffb347",
-        });
-      }
-    } catch (err) {
-      console.error("toggleDone error:", err);
+    } else {
+      // This will catch the PHP error if the user tries to mark it done on the wrong day
       Swal.fire({
         icon: "error",
-        title: "Network error",
+        text: result.error || "API Error",
         confirmButtonColor: "#ffb347",
       });
     }
-  };
+  } catch (err) {
+    console.error("toggleDone error:", err);
+    Swal.fire({
+      icon: "error",
+      title: "Network error",
+      confirmButtonColor: "#ffb347",
+    });
+  }
+};
 
   /* ================================================================
      COMPLETE ALL

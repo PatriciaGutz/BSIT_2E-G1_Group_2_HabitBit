@@ -165,10 +165,8 @@ if ($today_month == 12 && $today_date == 25) {
     });
     </script>
 
-<div class="quote-container text-white p-4 rounded-5 text-center mb-4 shadow-sm position-relative">
-        <a href="manage_quotes.php" class="position-absolute top-0 end-0 m-3 text-white opacity-50 text-decoration-none">
-            <i class="bi bi-pencil-square"></i>
-        </a>
+<a href="manage_quotes.php" class="text-decoration-none">
+    <div class="quote-container text-white p-4 rounded-5 text-center mb-4 shadow-sm position-relative">
         <div class="quote-icon-box top-left"><i class="bi bi-quote"></i></div>
         
         <p id="daily-quote" class="mb-0 fs-4 fw-bold py-4">
@@ -176,7 +174,13 @@ if ($today_month == 12 && $today_date == 25) {
         </p>
         
         <div class="quote-icon-box bottom-right"><i class="bi bi-quote"></i></div>
+
+        <div class="quote-edit-wrapper position-absolute top-0 end-0 m-3">
+            <i class="bi bi-pencil-square opacity-75"></i>
+            <span class="quote-tooltip">Quote Management</span>
+        </div>
     </div>
+</a>
         
         <div class="weekly-tracker bg-white p-3 rounded-4 shadow-sm mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
