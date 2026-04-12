@@ -115,9 +115,9 @@ if ($today_month == 12 && $today_date == 25) {
             <h2 class="fw-bold mb-0" id="greetingText"><?php echo $greeting; ?>,</h2>
             <h2 class="fw-bold" id="userNameText"><?php echo $user_name; ?>!</h2>
         </div>
-
+    
         <div class="d-flex align-items-center bg-white p-2 rounded-pill shadow-sm border">
-            <span id="habit-streak" class="me-2 streak-display fw-bold" data-highest="0" style="cursor: help; min-width: 50px; text-align: center;">🔥 0</span>
+            <span id="habit-streak" class="me-2 streak-display fw-bold" data-highest="0" style="cursor: help; min-width: 50px; text-align: center;">🔥0</span>
             <img id="dashboardAvatar" src="https://ui-avatars.com/api/?name=<?php echo urlencode($user_name); ?>&background=77D0A0&color=fff" class="rounded-circle" width="32" alt="Profile">
         </div>
     </div>
@@ -193,7 +193,7 @@ if ($today_month == 12 && $today_date == 25) {
 
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="fw-bold mb-0">Current Habits</h5>
-            <a href="profile.php" class="text-decoration-none text-orange fw-bold">View all ></a>
+            <a href="profile.php" class="view-all-btn">View All</a>
         </div>
 
         <div id="habit-list" class="habit-grid mb-5"></div>

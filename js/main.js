@@ -327,6 +327,7 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
 
             ${h.done ? `<div class="position-absolute bottom-0 start-0 m-3" style="font-size:1.4rem;">✅</div>` : ""}
+      
           </div>`;
       })
       .join("");
