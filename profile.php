@@ -92,23 +92,30 @@ function openEditProfileModal() {
   <div class="container py-4">
 
     <!-- Profile Header -->
-    <div class="d-flex align-items-center justify-content-between">
-      <div class="d-flex align-items-center gap-3 flex-grow-1">
-        <img id="profileAvatar" class="rounded-circle border shadow-sm" width="75" alt="Avatar">
-        <div>
-          <div class="d-flex align-items-center gap-2">
-            <h4 id="profileName" class="fw-bold mb-0"></h4>
-            <button class="btn btn-sm btn-light rounded-circle" onclick="openEditProfileModal()" title="Edit profile">
-              <i class="bi bi-pencil-fill" style="font-size: 0.8rem;"></i>
-            </button>
-          </div>
-          <small id="profileEmail" class="text-muted"></small>
-        </div>
+   <div class="d-flex align-items-center justify-content-between">
+  <div class="d-flex align-items-center gap-3 flex-grow-1">
+    <img id="profileAvatar" class="rounded-circle border shadow-sm" width="75" alt="Avatar">
+    <div>
+      <div class="d-flex align-items-center gap-2">
+        <h4 id="profileName" class="fw-bold mb-0"></h4>
+        <button class="btn btn-sm btn-light rounded-circle" onclick="openEditProfileModal()" title="Edit profile">
+          <i class="bi bi-pencil-fill" style="font-size: 0.8rem;"></i>
+        </button>
       </div>
-      <button id="logoutBtn" class="btn btn-outline-danger rounded-pill px-4 py-2">
-        <i class="bi bi-box-arrow-right me-2"></i>Logout
-      </button>
+      <small id="profileEmail" class="text-muted"></small>
     </div>
+  </div>
+
+  <div class="d-flex align-items-center gap-2">
+    <a href="recentlydeleted.php" class="btn btn-outline-secondary rounded-pill px-3 py-2 d-flex align-items-center text-decoration-none shadow-sm">
+      <i class="bi bi-trash3 me-2 text-danger"></i>
+      <span class="small fw-bold text-dark">Recently Deleted</span>
+    </a>
+    <button id="logoutBtn" class="btn btn-outline-danger rounded-pill px-4 py-2">
+      <i class="bi bi-box-arrow-right me-2"></i>Logout
+    </button>
+  </div>
+</div>
 
     <!-- Today's Progress -->
     <div class="bg-white p-4 rounded-4 shadow-sm border mb-4 mx-md-4 mt-4">

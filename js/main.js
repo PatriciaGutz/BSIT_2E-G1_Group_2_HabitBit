@@ -263,10 +263,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!elements.list) return;
 
     if (habits.length === 0) {
-      elements.list.innerHTML = `<p class="text-center text-muted p-4">No habits yet. Tap + to start!</p>`;
-      updateProgress();
-      return;
-    }
+    elements.list.innerHTML = `
+        <div class="col-12 d-flex justify-content-center align-items-center p-5 w-100">
+            <p class="text-muted fs-5 text-center">No habits yet. Tap + to start!</p>
+        </div>
+    `;
+    updateProgress();
+    return;
+}
 
     const deleteControls = deleteMode
       ? `<div class="d-flex justify-content-end gap-2 mb-3">
