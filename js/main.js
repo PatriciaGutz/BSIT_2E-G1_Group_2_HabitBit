@@ -859,12 +859,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const div = document.createElement("div");
       // Added 'active-day' for the current date highlight and 'border-dark' for the border
-      div.className = `day-item ${color} ${isToday ? "active-day border-dark" : ""}`;
+      div.className = `day-item ${color}${isToday ? " active-day" : ""}`;
 
       div.innerHTML = `
-        <span class="day-name">${DAY_NAMES[i]}</span>
-        <span class="day-number">${day.getDate()}</span>
-      `;
+    <span class="day-name">${DAY_NAMES[i]}</span>
+    <span class="day-number">${day.getDate()}</span>
+    `;
       gridEl.appendChild(div);
     }
 

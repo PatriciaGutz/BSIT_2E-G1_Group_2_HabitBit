@@ -119,6 +119,7 @@
   background: #ffffff;
   border: 1.5px solid #e2e8f0;
   border-radius: 12px;
+  overflow: visible;
   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
   z-index: 500;
   padding: 6px;
@@ -225,7 +226,6 @@
 
 
 #habit-list[data-view="grid"] .hvc-grid {
-  /* existing row class from Bootstrap */
 }
 
 
@@ -233,6 +233,7 @@
   display: flex;
   flex-direction: column;
   gap: 0;
+  overflow: visible; 
 }
 
 .hvc-list-row {
@@ -245,6 +246,8 @@
   background: #ffffff;
   transition: background 0.15s;
   cursor: default;
+  overflow: visible; 
+  position: relative;
 }
 
 .hvc-list-row:last-child {
@@ -361,6 +364,12 @@
 
 .hvc-list-row__actions {
   flex-shrink: 0;
+  position: static;
+}
+
+.hvc-list-row__actions .dropdown-menu {
+  z-index: 1055 !important; 
+  position: absolute !important;
 }
 
 

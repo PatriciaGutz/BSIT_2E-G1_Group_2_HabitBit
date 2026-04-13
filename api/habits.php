@@ -253,25 +253,32 @@ switch ($method) {
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 function updateHabitStreak($conn, $user_id, $date) {
-    $today = $date;
-    $chk = $conn->prepare('SELECT 1 FROM habit_completions WHERE user_id = ? AND date_completed = ? LIMIT 1');
-    $chk->bind_param('is', $user_id, $today);
-    $chk->execute();
-    if ($chk->get_result()->num_rows === 0) {
-        $conn->query("UPDATE users SET current_streak = 0 WHERE id = $user_id");
+    $res = $conn->query("SELECT current_streak, highest_streak, last_streak_date FROM users WHERE id = $user_id")->fetch_assoc();
+    if (!$res) return;
+
+    if (!empty($res['last_streak_date']) && $res['last_streak_date'] === $date) {
         return;
     }
-    $yesterday = date('Y-m-d', strtotime('-1 day', strtotime($today)));
+
+    // Confirm at least one completion exists for this date
+    $chk = $conn->prepare('SELECT 1 FROM habit_completions WHERE user_id = ? AND date_completed = ? LIMIT 1');
+    $chk->bind_param('is', $user_id, $date);
+    $chk->execute();
+    if ($chk->get_result()->num_rows === 0) {
+        $conn->query("UPDATE users SET current_streak = 0, last_streak_date = '$date' WHERE id = $user_id");
+        return;
+    }
+
+    $yesterday = date('Y-m-d', strtotime('-1 day', strtotime($date)));
     $chk->bind_param('is', $user_id, $yesterday);
     $chk->execute();
     $hadYesterday = $chk->get_result()->num_rows > 0;
 
-    $res = $conn->query("SELECT current_streak, highest_streak FROM users WHERE id = $user_id")->fetch_assoc();
     $new_current = $hadYesterday ? ($res['current_streak'] + 1) : 1;
     $new_highest = max($res['highest_streak'], $new_current);
 
-    $upd = $conn->prepare('UPDATE users SET current_streak = ?, highest_streak = ? WHERE id = ?');
-    $upd->bind_param('iii', $new_current, $new_highest, $user_id);
+    $upd = $conn->prepare('UPDATE users SET current_streak = ?, highest_streak = ?, last_streak_date = ? WHERE id = ?');
+    $upd->bind_param('iisi', $new_current, $new_highest, $date, $user_id);
     $upd->execute();
 }
 

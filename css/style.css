@@ -78,8 +78,7 @@
     }
 
     .day-item {
-      background: #f8f9fa !important;
-      border: 1px solid #eee !important;
+      border: 1px solid #eee;
       border-radius: 12px !important;
       display: flex;
       flex-direction: column;
@@ -91,10 +90,9 @@
     }
 
     .day-item.active-day {
-      background: #77D0A0 !important; /* Distinct color for today */
-      color: white !important;
-      border: none !important;
-      box-shadow: 0 4px 12px rgba(119, 208, 160, 0.3);
+      border: 2px solid #333 !important;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+      font-weight: 800;
     }
 
     .day-name {
