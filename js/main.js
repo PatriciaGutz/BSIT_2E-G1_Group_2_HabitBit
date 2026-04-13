@@ -1,4 +1,3 @@
-
 document.addEventListener("DOMContentLoaded", () => {
   /* ================================================================
      CATEGORY → ICON MAP
@@ -290,12 +289,19 @@ document.addEventListener("DOMContentLoaded", () => {
                     color:${isSelected ? "#fff" : "#333"};z-index:10;"
              onclick="event.stopPropagation(); toggleHabitSelection(${i})"
            >${isSelected ? "✓" : ""}</button>`
-          : `<div class="dropdown position-absolute" style="top:15px; right:15px; z-index:10;">
+          : `<div class="dropdown position-absolute" style="top:12px; right:12px; z-index:20;">
              <button class="btn btn-sm dropdown-toggle" type="button"
-                     data-bs-toggle="dropdown" aria-expanded="false" style="color:#333;">
+                     data-bs-toggle="dropdown"
+                     data-bs-boundary="viewport"
+                     data-bs-offset="0,4"
+                     aria-expanded="false"
+                     style="color:#333; background:rgba(255,255,255,0.75);
+                            border-radius:50%; width:32px; height:32px; padding:0;
+                            display:flex; align-items:center; justify-content:center;
+                            box-shadow:0 2px 6px rgba(0,0,0,0.15);">
                <i class="bi bi-three-dots-vertical"></i>
              </button>
-             <ul class="dropdown-menu dropdown-menu-end">
+             <ul class="dropdown-menu dropdown-menu-end shadow" style="z-index:9999;">
                <li><button class="dropdown-item" onclick="toggleDone(${i})">
                  ${h.done ? "Mark as Undone" : "Mark as Done"}
                </button></li>
@@ -821,8 +827,6 @@ document.addEventListener("DOMContentLoaded", () => {
       currentView = "year";
       this.classList.add("active");
       document.getElementById("viewMonth")?.classList.remove("active");
-      // For year view, fetch all 12 months — simplest: fetch current month and build from stored
-      // We'll load all months for the year by making 12 requests combined
       calendarData = {};
       for (let m = 1; m <= 12; m++) {
         try {
@@ -838,9 +842,6 @@ document.addEventListener("DOMContentLoaded", () => {
       buildCalendar();
     });
 
-  /* ================================================================
-     WEEKLY TRACKER
-  ================================================================ */
   function renderWeeklyGrid() {
     const gridEl = document.getElementById("weekly-grid");
     if (!gridEl) return;
@@ -909,9 +910,7 @@ document.addEventListener("DOMContentLoaded", () => {
     await loadWeekData(weekStart);
     renderWeeklyGrid();
   };
-  /* ================================================================
-     FAB MENU
-  ================================================================ */
+
   window.toggleMenu = () => {
     const fab = document.getElementById("fabMenu");
     if (fab) fab.classList.toggle("open");
@@ -922,9 +921,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (nav) nav.style.setProperty("--active-offset", `${percent}%`);
   };
 
-  /* ================================================================
-     BOOTSTRAP
-  ================================================================ */
+
   loadHabits();
   updateConsecutiveDays();
 });

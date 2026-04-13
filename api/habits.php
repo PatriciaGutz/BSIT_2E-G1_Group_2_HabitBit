@@ -230,7 +230,9 @@ switch ($method) {
 
     case 'DELETE':
         $habit_id = (int)($_GET['id'] ?? 0);
-
+        $stmt_logs = $conn->prepare('DELETE FROM habit_completions WHERE habit_id = ? AND user_id = ?');
+        $stmt_logs->bind_param('ii', $habit_id, $user_id);
+        $stmt_logs->execute();
         if (!$habit_id) {
             parse_str(file_get_contents('php://input'), $input);
             $habit_id = (int)($input['id'] ?? 0);

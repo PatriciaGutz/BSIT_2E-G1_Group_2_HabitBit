@@ -501,3 +501,19 @@
     grid-template-columns: 32px 1fr 32px;
   }
 }
+
+
+.hvc-list-row {
+  z-index: 1;
+}
+
+
+.hvc-list-row:has(.dropdown-menu.show) {
+  z-index: 9999 !important; 
+}
+
+
+.hvc-list-row__actions .dropdown-menu.show {
+  z-index: 10000 !important;
+  position: absolute !important; 
+}
