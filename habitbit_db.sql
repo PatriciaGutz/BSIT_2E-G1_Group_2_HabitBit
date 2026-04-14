@@ -115,6 +115,7 @@ CREATE TABLE `users` (
   `password` varchar(255) NOT NULL,
   `current_streak` int(11) DEFAULT 0,
   `highest_streak` int(11) DEFAULT 0,
+  `last_streak_date` date DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -122,11 +123,11 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `first_name`, `last_name`, `email`, `password`, `current_streak`, `highest_streak`, `created_at`) VALUES
-(1, 'Michael', 'Mercado', 'michaeljosephmercado2005@gmail.com', '$2y$10$RQTfEGfaY5eXB5gsmHOv5edy34c.N3CisEJwobayBfhpnBXqqTHD2', 0, 0, '2026-04-05 05:19:57'),
-(2, 'Haizee', 'Marquez', 'haizeeMarquez@gmail.com', '$2y$10$Pb9yIg10zH6uDtIVrVqIx.BXwzA48rBzHdlO6HVZ0hK6aYrRrQU3.', 0, 0, '2026-04-10 14:38:09'),
-(3, 'Theo', 'Irocio', 'theoIrocio@gmail.com', '$2y$10$rBc.LvAKfLEdgPgOkF0cjeQObS38mlR0oHDa3Yc54aMNP3LZYHlFO', 0, 0, '2026-04-10 14:58:53'),
-(4, 'Kian', 'Ganiola', 'KianGaniola@gmail.com', '$2y$10$zs2OlFED.zfGgkRoBjTp0uB97ib9qOmRggF3DnnTNX7xpXvj4lq02', 1, 1, '2026-04-12 01:27:11');
+INSERT INTO `users` (`id`, `first_name`, `last_name`, `email`, `password`, `current_streak`, `highest_streak`, `last_streak_date`, `created_at`) VALUES
+(1, 'Michael', 'Mercado', 'michaeljosephmercado2005@gmail.com', '$2y$10$RQTfEGfaY5eXB5gsmHOv5edy34c.N3CisEJwobayBfhpnBXqqTHD2', 0, 0, NULL, '2026-04-05 05:19:57'),
+(2, 'Haizee', 'Marquez', 'haizeeMarquez@gmail.com', '$2y$10$Pb9yIg10zH6uDtIVrVqIx.BXwzA48rBzHdlO6HVZ0hK6aYrRrQU3.', 0, 0, NULL, '2026-04-10 14:38:09'),
+(3, 'Theo', 'Irocio', 'theoIrocio@gmail.com', '$2y$10$rBc.LvAKfLEdgPgOkF0cjeQObS38mlR0oHDa3Yc54aMNP3LZYHlFO', 0, 0, NULL, '2026-04-10 14:58:53'),
+(4, 'Kian', 'Ganiola', 'KianGaniola@gmail.com', '$2y$10$zs2OlFED.zfGgkRoBjTp0uB97ib9qOmRggF3DnnTNX7xpXvj4lq02', 1, 1, NULL, '2026-04-12 01:27:11');
 
 -- --------------------------------------------------------
 

@@ -147,7 +147,7 @@
       padding: 30px 15px !important;
       border-radius: 25px !important;
       position: relative;
-      overflow: visible;          /* was: hidden — caused dropdown to be clipped */
+      overflow: hidden;        
       border: none !important;
       box-shadow: 0 0 0 2px #a8ff78, 0 4px 15px rgba(0,0,0,0.1) !important; 
       transition: transform 0.2s ease, box-shadow 0.2s ease;

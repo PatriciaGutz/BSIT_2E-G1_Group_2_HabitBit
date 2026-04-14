@@ -250,24 +250,29 @@ switch ($method) {
         } else {
             sendJson(['error' => 'Invalid ID'], 400);
         }
-        exit();
+        exit(); 
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 function updateHabitStreak($conn, $user_id, $date) {
-    $res = $conn->query("SELECT current_streak, highest_streak, last_streak_date FROM users WHERE id = $user_id")->fetch_assoc();
+
+    $stmt = $conn->prepare("SELECT current_streak, highest_streak, last_streak_date FROM users WHERE id = ?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $res = $stmt->get_result()->fetch_assoc();
+    
     if (!$res) return;
 
     if (!empty($res['last_streak_date']) && $res['last_streak_date'] === $date) {
         return;
     }
 
-    // Confirm at least one completion exists for this date
     $chk = $conn->prepare('SELECT 1 FROM habit_completions WHERE user_id = ? AND date_completed = ? LIMIT 1');
     $chk->bind_param('is', $user_id, $date);
     $chk->execute();
-    if ($chk->get_result()->num_rows === 0) {
-        $conn->query("UPDATE users SET current_streak = 0, last_streak_date = '$date' WHERE id = $user_id");
+    $completionExists = $chk->get_result()->num_rows > 0;
+
+    if (!$completionExists) {
         return;
     }
 
