@@ -73,8 +73,6 @@ CREATE TABLE IF NOT EXISTS `quotes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Quotes
------------------------------------------------------------
-
 INSERT INTO quotes (id, quote_text, is_selected) VALUES
 (1, 'Believe you can and you''re halfway there.', 0),
 (2, 'Don''t stop when you''re tired. Stop when you''re done.', 0),
@@ -86,8 +84,6 @@ INSERT INTO quotes (id, quote_text, is_selected) VALUES
 (8, 'Focus on the goal, not the obstacles.', 0),
 (9, 'Small habits, big changes.', 0),
 (10, 'Stay consistent, the results will follow.', 0);
-
------------------------------------------------------------
 
 
 CREATE TABLE IF NOT EXISTS `user_quotes` (
