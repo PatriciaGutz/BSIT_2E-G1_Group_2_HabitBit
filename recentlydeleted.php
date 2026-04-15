@@ -83,9 +83,11 @@ document.addEventListener("DOMContentLoaded", loadArchivedHabits);
 
 async function loadArchivedHabits() {
   try {
-    const res = await fetch("api/habits.php");
+    const res = await fetch("api/habits.php?action=archived", {
+  credentials: "same-origin"
+});
     const habits = await res.json();
-    const archived = habits.filter(h => h.is_archived == 1);
+    const archived = habits;
     const container = document.getElementById("archive-list");
 
     if (archived.length === 0) {
@@ -123,7 +125,7 @@ function habitCard(h) {
 
         <button class="btn btn-sm btn-danger"
                 onclick="deleteHabitPermanent(${h.id})">
-          Delete Permanently
+          Delete
         </button>
       </div>
     </div>
@@ -136,6 +138,7 @@ async function restoreHabit(id) {
   await fetch("api/habits.php", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
     body: JSON.stringify({
       id: id,
       is_archived: 0
@@ -151,6 +154,7 @@ async function deleteHabitPermanent(id) {
   await fetch("api/habits.php", {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
     body: JSON.stringify({ id })
   });
 

@@ -1,6 +1,7 @@
 <?php
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: http://localhost');
+header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
@@ -20,5 +21,3 @@ function sendJson($data, $statusCode = 200) {
 function getCurrentUserId() {
     return isset($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
 }
-?>
-

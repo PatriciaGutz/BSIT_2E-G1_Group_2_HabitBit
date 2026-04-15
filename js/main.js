@@ -310,7 +310,7 @@ document.addEventListener("DOMContentLoaded", () => {
                  ${h.done ? "Mark as Undone" : "Mark as Done"}
                </button></li>
                <li><button class="dropdown-item" onclick="editHabit(${i})">Edit</button></li>
-               <li><button class="dropdown-item text-danger" onclick="deleteHabit(${i})">Delete</button></li>
+               <li><button class="dropdown-item text-danger" onclick="deleteHabit(${h.id})">Delete</button></li>
              </ul>
            </div>`;
 
@@ -428,45 +428,41 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ================================================================
      DELETE HABITS
   ================================================================ */
-  window.deleteHabit = async (i) => {
-    const habit = habits[i];
-    if (!habit?.id) return;
+  window.deleteHabit = async (id) => {
+    if (!id) {
+        Swal.fire("error", "invalid habit id", "error");
+        return;
+    }
 
     const conf = await Swal.fire({
-      title: "Delete habit?",
-      text: "This cannot be undone.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#333",
-      confirmButtonText: "Yes, delete",
+        title: "Delete habit?",
+        text: "This will move the habit to Recently Deleted.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#333",
+        confirmButtonText: "Yes, delete",
     });
+
     if (!conf.isConfirmed) return;
 
     try {
-      const res = await fetch("api/habits.php", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ id: habit.id }),
-      });
-      const result = await res.json();
-      if (result.success) {
-        await loadHabits();
-      } else {
-        Swal.fire({
-          icon: "error",
-          text: result.error,
-          confirmButtonColor: "#ffb347",
+        const res = await fetch("api/habits.php", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: id }),
         });
-      }
+
+        const result = await res.json();
+        if (result.success) {
+            await loadHabits(); // refresh dashboard
+        } else {
+            Swal.fire("error", result.error, "error");
+        }
     } catch (err) {
-      Swal.fire({
-        icon: "error",
-        title: "Network error",
-        confirmButtonColor: "#ffb347",
-      });
+        Swal.fire("error", "Network error", "error");
     }
-  };
+};
 
   window.toggleDeleteMode = () => {
     if (!habits.length) {

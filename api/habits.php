@@ -65,7 +65,7 @@ if ($action === 'uncomplete') {
 
 // ── ACTION: loadHabits ───────────────────────────────────────────────────
 if ($action === 'loadHabits') {
-    $stmt = $conn->prepare('SELECT * FROM habits WHERE user_id = ? ORDER BY time_slot ASC');
+    $stmt = $conn->prepare('SELECT * FROM habits WHERE user_id = ? AND is_archived = 0 ORDER BY time_slot ASC');
     $stmt->bind_param('i', $user_id);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -99,7 +99,7 @@ if ($action === 'calendar') {
     $data = [];
     while ($row = $rows->fetch_assoc()) {
         $current_date = $row['date_completed'];
-        $count_stmt = $conn->prepare('SELECT COUNT(*) as total FROM habits WHERE user_id = ? AND DATE(created_at) <= ?');
+        $count_stmt = $conn->prepare('SELECT COUNT(*) as total FROM habits WHERE user_id = ? AND is_archived = 0 AND DATE(created_at) <= ?');
         $count_stmt->bind_param('is', $user_id, $current_date);
         $count_stmt->execute();
         $total_active = $count_stmt->get_result()->fetch_assoc()['total'];
@@ -113,6 +113,27 @@ if ($action === 'calendar') {
 }
 
 // ── Standard CRUD (GET, POST, PUT, DELETE) ─────────────────────────────────
+// ── ACTION: archived habits (Recently Deleted) ─────────────────────────────
+if ($action === 'archived' && $method === 'GET') {
+    $stmt = $conn->prepare(
+        'SELECT *
+         FROM habits
+         WHERE user_id = ?
+         AND is_archived = 1
+         ORDER BY archived_at DESC'
+    );
+    $stmt->bind_param('i', $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $habits = [];
+    while ($row = $result->fetch_assoc()) {
+        $habits[] = $row;
+    }
+
+    sendJson($habits);
+    exit();
+}
 switch ($method) {
     case 'GET':
         /**
@@ -138,6 +159,7 @@ switch ($method) {
                 ) AS last_completed_date
             FROM habits h
             WHERE h.user_id = ?
+            AND h.is_archived = 0
             ORDER BY h.created_at DESC
         ');
         $stmt->bind_param('i', $user_id);
@@ -178,79 +200,103 @@ switch ($method) {
 
     case 'PUT':
         $raw = file_get_contents('php://input');
-        parse_str($raw, $input);
-        if (empty($input)) $input = json_decode($raw, true) ?: [];
+        $input = json_decode($raw, true);
+        
+        if (!$input) {
+            parse_str($raw, $input);
+        }
 
         $habit_id = (int)($input['id'] ?? 0);
         if (!$habit_id) sendJson(['error' => 'id required'], 400);
 
-        $updates = []; $params = []; $types = '';
-
-        if (isset($input['title'])) {
-            $updates[] = 'title = ?';
-            $params[]  = ucfirst(trim($input['title']));
-            $types    .= 's';
-        }
-        if (isset($input['category'])) {
-            $updates[] = 'category = ?';
-            $params[]  = trim($input['category']);
-            $types    .= 's';
-            $updates[] = 'icon = ?';
-            $params[]  = categoryToIcon(trim($input['category']));
-            $types    .= 's';
-        }
-        if (isset($input['repeat_type'])) {
-            $updates[] = 'repeat_type = ?';
-            $params[]  = trim($input['repeat_type']);
-            $types    .= 's';
-        }
-        if (isset($input['time_slot'])) {
-            $updates[] = 'time_slot = ?';
-            $params[]  = trim($input['time_slot']);
-            $types    .= 's';
-        }
-        if (isset($input['description'])) {
-            $updates[] = 'description = ?';
-            $params[]  = trim($input['description']);
-            $types    .= 's';
+        if (isset($input['is_archived'])) {
+            $stmt = $conn->prepare('UPDATE habits SET is_archived = ?, archived_at = NULL WHERE id = ? AND user_id = ?');
+            $stmt->bind_param('iii', $input['is_archived'], $habit_id, $user_id);
+            $stmt->execute();
+            sendJson(['success' => true]);
+            break;
         }
 
-        if (empty($updates)) sendJson(['error' => 'Nothing to update'], 400);
+    // ✅ NORMAL UPDATE (title, category, etc.)
+    $updates = []; $params = []; $types = '';
 
-        $sql   = 'UPDATE habits SET ' . implode(', ', $updates) . ' WHERE id = ? AND user_id = ?';
-        $types .= 'ii';
-        $params[] = $habit_id;
-        $params[] = $user_id;
+    if (isset($input['title'])) {
+        $updates[] = 'title = ?';
+        $params[]  = ucfirst(trim($input['title']));
+        $types    .= 's';
+    }
+    if (isset($input['category'])) {
+        $updates[] = 'category = ?';
+        $params[]  = trim($input['category']);
+        $types    .= 's';
+        $updates[] = 'icon = ?';
+        $params[]  = categoryToIcon(trim($input['category']));
+        $types    .= 's';
+    }
+    if (isset($input['repeat_type'])) {
+        $updates[] = 'repeat_type = ?';
+        $params[]  = trim($input['repeat_type']);
+        $types    .= 's';
+    }
+    if (isset($input['time_slot'])) {
+        $updates[] = 'time_slot = ?';
+        $params[]  = trim($input['time_slot']);
+        $types    .= 's';
+    }
+    if (isset($input['description'])) {
+        $updates[] = 'description = ?';
+        $params[]  = trim($input['description']);
+        $types    .= 's';
+    }
 
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param($types, ...$params);
-        $stmt->execute();
-        sendJson(['success' => true]);
-        break;
+    if (empty($updates)) sendJson(['error' => 'Nothing to update'], 400);
+
+    $sql   = 'UPDATE habits SET ' . implode(', ', $updates) . ' WHERE id = ? AND user_id = ?';
+    $types .= 'ii';
+    $params[] = $habit_id;
+    $params[] = $user_id;
+
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param($types, ...$params);
+    $stmt->execute();
+
+    sendJson(['success' => true]);
+    break;
 
     case 'DELETE':
         $habit_id = (int)($_GET['id'] ?? 0);
-        $stmt_logs = $conn->prepare('DELETE FROM habit_completions WHERE habit_id = ? AND user_id = ?');
-        $stmt_logs->bind_param('ii', $habit_id, $user_id);
-        $stmt_logs->execute();
+
         if (!$habit_id) {
-            parse_str(file_get_contents('php://input'), $input);
+            $raw = file_get_contents('php://input');
+            $input = json_decode($raw, true);
             $habit_id = (int)($input['id'] ?? 0);
         }
 
-        if ($habit_id > 0) {
-            $stmt = $conn->prepare('DELETE FROM habits WHERE id = ? AND user_id = ?');
-            $stmt->bind_param('ii', $habit_id, $user_id);
-
-            if ($stmt->execute()) {
-                sendJson(['success' => true]);
-            } else {
-                sendJson(['error' => 'Delete failed'], 500);
-            }
-        } else {
-            sendJson(['error' => 'Invalid ID'], 400);
+        if ($habit_id <= 0) {
+            sendJson(['error' => 'invalid id: ' . $habit_id], 400);
         }
-        exit(); 
+
+        $check = $conn->prepare('SELECT is_archived FROM habits WHERE id = ? AND user_id = ?');
+        $check->bind_param('ii', $habit_id, $user_id);
+        $check->execute();
+        $row = $check->get_result()->fetch_assoc();
+
+        if (!$row) {
+            sendJson(['error' => 'habit not found'], 404);
+        }
+
+        if ((int)$row['is_archived'] === 0) {
+            $stmt = $conn->prepare('UPDATE habits SET is_archived = 1, archived_at = NOW() WHERE id = ? AND user_id = ?');
+            $stmt->bind_param('ii', $habit_id, $user_id);
+            $stmt->execute();
+            sendJson(['success' => true, 'archived' => true]);
+        } else {
+            $stmt = $conn->prepare('DELETE FROM habits WHERE id = ? AND user_id = ? AND is_archived = 1');
+            $stmt->bind_param('ii', $habit_id, $user_id);
+            $stmt->execute();
+            sendJson(['success' => true, 'deleted' => true]);
+        }
+        break;
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────

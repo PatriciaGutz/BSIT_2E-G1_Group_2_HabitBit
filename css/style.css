@@ -1209,3 +1209,53 @@
 .bg-white.p-2.rounded-3.shadow-sm.border {
   overflow: visible !important;
 }
+.habit-row:hover {
+  background: #f8f9fa;
+}
+.habit-icon {
+  font-size: 1.2rem;
+}
+.habit-list-wrapper {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.habit-list-item {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.habit-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.habit-icon {
+  font-size: 1.4rem;
+}
+
+.habit-title {
+  font-weight: 600;
+}
+
+.habit-meta {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.habit-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.archived-item:hover {
+  background: #f9fafb;
+}

@@ -192,7 +192,7 @@ const HabitViewControls = (() => {
                <li><button class="dropdown-item" onclick="toggleDone(${origIndex})">
                  ${isDone ? 'Mark as Undone' : 'Mark as Done'}</button></li>
                <li><button class="dropdown-item" onclick="editHabit(${origIndex})">Edit</button></li>
-               <li><button class="dropdown-item text-danger" onclick="deleteHabit(${origIndex})">Delete</button></li>
+               <li><button class="dropdown-item text-danger" onclick="deleteHabit(${h.id})">Delete</button></li>
              </ul>
            </div>`;
 
@@ -276,7 +276,7 @@ const HabitViewControls = (() => {
                 <li><button class="dropdown-item" onclick="toggleDone(${origIndex})">
                   ${isDone ? 'Mark as Undone' : 'Mark as Done'}</button></li>
                 <li><button class="dropdown-item" onclick="editHabit(${origIndex})">Edit</button></li>
-                <li><button class="dropdown-item text-danger" onclick="deleteHabit(${origIndex})">Delete</button></li>
+                <li><button class="dropdown-item text-danger" onclick="deleteHabit(${h.id})">Delete</button></li>
               </ul>
             </div>
           </div>` : ''}

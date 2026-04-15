@@ -98,6 +98,17 @@ CREATE TABLE IF NOT EXISTS `user_quotes` (
     FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- ============================================================
+-- SOFT DELETE SUPPORT (Recently Deleted)
+-- ============================================================
+
+ALTER TABLE `habits`
+ADD COLUMN `is_archived` TINYINT(1) NOT NULL DEFAULT 0 AFTER `is_done`,
+ADD COLUMN `archived_at` TIMESTAMP NULL DEFAULT NULL 
+  AFTER `updated_at`;
+
+CREATE INDEX idx_user_archived
+ON habits (user_id, is_archived, archived_at);
 
 -- ============================================================
 --  PROCEDURE 1 — CompleteHabit
