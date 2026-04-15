@@ -1,6 +1,5 @@
 -- ============================================================
 --  habitbit_db — Improved Schema + Transaction + Procedures
---  Generated: 2026-04-15
 -- ============================================================
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -72,6 +71,24 @@ CREATE TABLE IF NOT EXISTS `quotes` (
   `is_selected` int(11) DEFAULT 0,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Quotes
+-----------------------------------------------------------
+
+INSERT INTO quotes (id, quote_text, is_selected) VALUES
+(1, 'Believe you can and you''re halfway there.', 0),
+(2, 'Don''t stop when you''re tired. Stop when you''re done.', 0),
+(3, 'Discipline is doing what needs to be done, even if you don''t want to do it.', 0),
+(4, 'Your only limit is your mind.', 0),
+(5, 'Great things never come from comfort zones.', 0),
+(6, 'Success is the sum of small efforts, repeated day in and day out.', 0),
+(7, 'The secret of your future is hidden in your daily routine.', 0),
+(8, 'Focus on the goal, not the obstacles.', 0),
+(9, 'Small habits, big changes.', 0),
+(10, 'Stay consistent, the results will follow.', 0);
+
+-----------------------------------------------------------
+
 
 CREATE TABLE IF NOT EXISTS `user_quotes` (
   `id`         int(11)   NOT NULL AUTO_INCREMENT,
