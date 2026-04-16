@@ -17,22 +17,6 @@ if (!isset($_SESSION['user_id'])) {
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   <link rel="stylesheet" href="css/style.css">
 
-  <style>
-    /* recently deleted-only styling */
-    .habit-card.archived {
-      background: #f8f9fa;
-      border: 2px dashed #ccc;
-      opacity: 0.9;
-      padding: 15px;
-      border-radius: 10px;
-    }
-
-    .archive-actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 12px;
-    }
-  </style>
 </head>
 <body class="d-flex flex-column min-vh-100">
 
@@ -71,7 +55,7 @@ if (!isset($_SESSION['user_id'])) {
 
   <div class="row mt-4">
     <div class="col-12">
-        <div id="archive-list" class="rounded-5 border bg-white shadow-sm d-flex flex-column align-items-center justify-content-center" style="min-height: 450px; padding: 60px;">
+        <div id="archive-list" class="rounded-5 border bg-white shadow-sm" style="min-height: 450px; padding: 30px;">
         </div>
     </div>
 </div>
@@ -112,19 +96,14 @@ async function loadArchivedHabits() {
 
 function habitCard(h) {
   return `
-    <div class="habit-card archived">
-      <div class="habit-title fw-bold">${escapeHtml(h.title)}</div>
+    <div class="archived-item"> <div class="habit-title fw-bold">${escapeHtml(h.title)}</div>
       <div class="habit-meta text-muted small">${h.category} • ${h.repeat_type}</div>
-      <div class="habit-meta text-muted small">${h.time_slot}</div>
+      <div class="habit-meta text-muted small"><i class="bi bi-clock"></i> ${h.time_slot}</div>
 
-      <div class="archive-actions">
-        <button class="btn btn-sm btn-success"
-                onclick="restoreHabit(${h.id})">
+      <div class="archived-actions"> <button class="btn-restore" onclick="restoreHabit(${h.id})">
           Restore
         </button>
-
-        <button class="btn btn-sm btn-danger"
-                onclick="deleteHabitPermanent(${h.id})">
+        <button class="btn-delete-perm" onclick="deleteHabitPermanent(${h.id})">
           Delete
         </button>
       </div>

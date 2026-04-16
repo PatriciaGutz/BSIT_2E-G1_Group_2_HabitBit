@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Weekly tracker state
   let weekStart = new Date(today);
-  weekStart.setDate(today.getDate() - today.getDay()); 
+  weekStart.setDate(today.getDate() - today.getDay());
 
   /* ================================================================
      DOM REFS
@@ -170,7 +170,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const { category, title, repeat, hour, minute, period, desc } =
       elements.inputs;
 
-    // Validation
     if (!title || !title.value.trim()) {
       return Swal.fire({
         icon: "error",
@@ -219,8 +218,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const method = editIndex !== null ? "PUT" : "POST";
       const response = await fetch("api/habits.php", {
         method,
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams(habitData),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(habitData),
       });
 
       const result = await response.json();
@@ -235,7 +234,6 @@ document.addEventListener("DOMContentLoaded", () => {
           timer: 1500,
         });
       } else {
-        // Ito ang sasalo sa error message galing sa PHP check natin
         Swal.fire({
           icon: "error",
           title: "Conflict",
@@ -263,14 +261,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!elements.list) return;
 
     if (habits.length === 0) {
-    elements.list.innerHTML = `
+      elements.list.innerHTML = `
         <div class="col-12 d-flex justify-content-center align-items-center p-5 w-100">
             <p class="text-muted fs-5 text-center">No habits yet. Tap + to start!</p>
         </div>
     `;
-    updateProgress();
-    return;
-}
+      updateProgress();
+      return;
+    }
 
     const deleteControls = deleteMode
       ? `<div class="d-flex justify-content-end gap-2 mb-3">
@@ -347,57 +345,80 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   /* ================================================================
-     TOGGLE DONE 
-  ================================================================ */
- window.toggleDone = async (i) => {
-  const habit = habits[i];
-  if (!habit?.id)
-    return Swal.fire({
-      icon: "warning",
-      text: "No habit ID",
-      confirmButtonColor: "#ffb347",
-    });
+    TOGGLE DONE - REWARD VERSION
+================================================================ */
+  window.toggleDone = async (i) => {
+    const habit = habits[i];
+    if (!habit?.id) return;
 
-  const newDone = !habit.done;
-  
-  // If undoing, use the recorded completion date; if completing, use today.
-  const targetDate = !newDone && habit.completed_at ? habit.completed_at : formatDate(new Date());
-  const action = newDone ? "complete" : "uncomplete";
+    const newDone = !habit.done;
+    const targetDate =
+      !newDone && habit.completed_at
+        ? habit.completed_at
+        : formatDate(new Date());
+    const action = newDone ? "complete" : "uncomplete";
 
-  try {
-    const res = await fetch(`api/habits.php?action=${action}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ habit_id: habit.id, date: targetDate }),
-    });
-    const result = await res.json();
-
-    if (result.success) {
-      await loadHabits();
-      Swal.fire({
-        icon: newDone ? "success" : "info",
-        title: newDone ? "✅ Done!" : "↩️ Undone",
-        timer: 1200,
-        showConfirmButton: false,
+    try {
+      const res = await fetch(`api/habits.php?action=${action}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ habit_id: habit.id, date: targetDate }),
       });
-    } else {
-      // This will catch the PHP error if the user tries to mark it done on the wrong day
-      Swal.fire({
-        icon: "error",
-        text: result.error || "API Error",
-        confirmButtonColor: "#ffb347",
-      });
+      const result = await res.json();
+
+      if (result.success) {
+        await loadHabits();
+
+        if (newDone) {
+          // 1. CELEBRATION BURST - Mas maraming particles para mas ramdam!
+          confetti({
+            particleCount: 120,
+            spread: 70,
+            origin: { y: 0.75 },
+            colors: ["#77D0A0", "#40E0D0", "#ffffff", "#FFD700"], // Added Gold for extra reward feel
+            ticks: 200, // Mas matagal bago mawala ang confetti
+          });
+
+          // 2. REWARD TOAST - Gagamit tayo ng random motivational messages
+          const rewards = [
+            "Nice one! One bit at a time. 🚀",
+            "Good Job! You're getting better. 🔥",
+            "Habit Bit collected! Keep going. ✨",
+            "You're on fire today! 🏆",
+          ];
+          const randomMsg = rewards[Math.floor(Math.random() * rewards.length)];
+
+          const Toast = Swal.mixin({
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 2500,
+            timerProgressBar: true,
+            background: "#f0fff4",
+            color: "#0f5132",
+          });
+
+          Toast.fire({
+            icon: "success",
+            title: randomMsg,
+          });
+        } else {
+          // Simple Toast lang kapag nag-undo
+          Swal.mixin({
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 1500,
+          }).fire({
+            icon: "info",
+            title: "Undo: Progress reversed",
+          });
+        }
+      }
+    } catch (err) {
+      console.error("toggleDone error:", err);
     }
-  } catch (err) {
-    console.error("toggleDone error:", err);
-    Swal.fire({
-      icon: "error",
-      title: "Network error",
-      confirmButtonColor: "#ffb347",
-    });
-  }
-};
-
+  };
   /* ================================================================
      COMPLETE ALL
   ================================================================ */
@@ -430,39 +451,39 @@ document.addEventListener("DOMContentLoaded", () => {
   ================================================================ */
   window.deleteHabit = async (id) => {
     if (!id) {
-        Swal.fire("error", "invalid habit id", "error");
-        return;
+      Swal.fire("error", "invalid habit id", "error");
+      return;
     }
 
     const conf = await Swal.fire({
-        title: "Delete habit?",
-        text: "This will move the habit to Recently Deleted.",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#d33",
-        cancelButtonColor: "#333",
-        confirmButtonText: "Yes, delete",
+      title: "Delete habit?",
+      text: "This will move the habit to Recently Deleted.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#333",
+      confirmButtonText: "Yes, delete",
     });
 
     if (!conf.isConfirmed) return;
 
     try {
-        const res = await fetch("api/habits.php", {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: id }),
-        });
+      const res = await fetch("api/habits.php", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: id }),
+      });
 
-        const result = await res.json();
-        if (result.success) {
-            await loadHabits(); // refresh dashboard
-        } else {
-            Swal.fire("error", result.error, "error");
-        }
+      const result = await res.json();
+      if (result.success) {
+        await loadHabits(); // refresh dashboard
+      } else {
+        Swal.fire("error", result.error, "error");
+      }
     } catch (err) {
-        Swal.fire("error", "Network error", "error");
+      Swal.fire("error", "Network error", "error");
     }
-};
+  };
 
   window.toggleDeleteMode = () => {
     if (!habits.length) {
@@ -920,7 +941,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const nav = document.querySelector(".app-nav");
     if (nav) nav.style.setProperty("--active-offset", `${percent}%`);
   };
-
 
   loadHabits();
   updateConsecutiveDays();

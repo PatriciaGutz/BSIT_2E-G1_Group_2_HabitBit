@@ -332,7 +332,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const navBar = document.querySelector('.app-nav');
   if(navBar) navBar.style.setProperty('--active-offset', '27.3%');
 
-  // Use PHP session data (prioritized over localStorage)
   const phpFirstName = "<?php echo isset($_SESSION['firstname']) ? $_SESSION['firstname'] : ''; ?>";
   const phpUserId = "<?php echo isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 0; ?>";
   
@@ -345,8 +344,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (userNameText) userNameText.textContent = phpFirstName + "!";
     if (dashboardAvatar) dashboardAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(phpFirstName)}&background=77D0A0&color=fff`;
   }
-});
-
+}); // Dito nagtatapos ang logic
 </script>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script src="js/main.js"></script>
+
    </body>
 </html>

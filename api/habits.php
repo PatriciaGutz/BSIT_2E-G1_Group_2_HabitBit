@@ -175,27 +175,44 @@ switch ($method) {
         sendJson($habits);
         break;
 
-    case 'POST':
-        $input     = json_decode(file_get_contents('php://input'), true) ?: $_POST;
+case 'POST':
+        $rawInput = file_get_contents('php://input');
+        $input = json_decode($rawInput, true) ?: $_POST;
+
         $title     = trim($input['title'] ?? '');
         $title     = ucfirst($title);
         $time_slot = trim($input['time_slot'] ?? '');
         $category  = trim($input['category'] ?? 'Personal');
+        $rep       = $input['repeat_type'] ?? 'Daily';
+        $desc      = $input['description'] ?? '';
 
-        if (empty($title) || empty($time_slot)) sendJson(['error' => 'Title and Time slot are required'], 400);
+        if (empty($title) || empty($time_slot)) {
+            sendJson(['error' => 'Title and Time slot are required'], 400);
+        }
 
-        $checkStmt = $conn->prepare('SELECT id FROM habits WHERE user_id = ? AND time_slot = ?');
+        // 1. Check for Time Conflict
+        $checkStmt = $conn->prepare('SELECT id FROM habits WHERE user_id = ? AND time_slot = ? AND is_archived = 0');
         $checkStmt->bind_param('is', $user_id, $time_slot);
         $checkStmt->execute();
-        if ($checkStmt->get_result()->num_rows > 0) sendJson(['error' => 'Time slot conflict!'], 400);
+        if ($checkStmt->get_result()->num_rows > 0) {
+            sendJson(['error' => "This time slot ($time_slot) is already occupied."], 400);
+            exit();
+        }
 
+        // 2. Insert Data
         $icon = categoryToIcon($category);
+        // Siguraduhin na 7 ang '?' at 7 din ang variables sa bind_param
         $stmt = $conn->prepare('INSERT INTO habits (user_id, icon, category, title, repeat_type, time_slot, description, is_done) VALUES (?, ?, ?, ?, ?, ?, ?, 0)');
-        $rep  = $input['repeat_type'] ?? 'Daily';
-        $desc = $input['description'] ?? '';
+        
+        // 'issssss' -> i (user_id), s (icon), s (category), s (title), s (rep), s (time_slot), s (desc)
         $stmt->bind_param('issssss', $user_id, $icon, $category, $title, $rep, $time_slot, $desc);
-        $stmt->execute();
-        sendJson(['success' => true, 'id' => $conn->insert_id]);
+        
+        if ($stmt->execute()) {
+            sendJson(['success' => true, 'id' => $conn->insert_id]);
+        } else {
+            // Ito ang magsasabi kung ano mismo ang error sa MySQL para hindi tayo nanghuhula
+            sendJson(['error' => 'MySQL Error: ' . $stmt->error], 500);
+        }
         break;
 
     case 'PUT':
